@@ -8,7 +8,7 @@
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-URgK6AVnBSIMoAuVWqskh2TG45HfgJGSCB5QIVfGt8I=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src https://www.aladin.co.kr 'sha256-uouo/9QLWTqDMaPMpuzoaynZ71VFfWKnTXtrTZYdoaQ=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -605,7 +605,13 @@ details summary{cursor:pointer;font-weight:600;color:var(--tx2)}
 .spine{position:relative;width:var(--w);height:var(--h);background:var(--c);color:var(--ink);border:0;border-radius:1px 1px 0 0;padding:5px 0 4px;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden;cursor:pointer;font-weight:600;box-shadow:inset 1px 0 0 rgba(255,255,255,.2),inset -1px 0 0 rgba(0,0,0,.14);transition:transform .15s}
 .spine:hover:not(:disabled){background:var(--c);transform:translateY(-6px)}
 .spcov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:4% 50%;transform:scale(1.04)}
+.sthd{flex-wrap:wrap;row-gap:6px}
+.sthd h3{white-space:nowrap;flex:1 0 auto}
 .spimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.spine.real{padding:0;background:#ddd;box-shadow:inset -1px 0 0 rgba(0,0,0,.18),inset 1px 0 0 rgba(255,255,255,.25)}
+.spreal{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+.bsprev{width:30px;height:120px;flex:none;border:1px solid var(--line);border-radius:2px;background:#f5f5f7;overflow:hidden}
+.bsprev img{width:100%;height:100%;object-fit:fill;display:block}
 .sp-t{position:relative;z-index:1;writing-mode:vertical-rl;text-orientation:mixed;font-size:var(--fs);letter-spacing:.04em;line-height:1.05;min-height:0;max-height:78%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .spine.art .sp-t{background:var(--c);padding:4px 1px;border-radius:1px;margin-top:10%;box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 12%,transparent)}
 .sp-a{position:relative;z-index:1;writing-mode:vertical-rl;font-size:calc(var(--fs) - 1.5px);font-weight:400;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:30%;flex:none}
@@ -824,6 +830,24 @@ function normalize(d) {
     if (!hab) { hab = { id: uid(), name: '습관', col: 'sage', icon: '🌱' }; d.cats.push(hab); }
     for (const r of d.rules) if (r.title === '소금물 마시기' && !r.cat) { r.cat = hab.id; r.updatedAt = Date.now(); }
     d.v5 = true;
+  }
+  // 구글에서 불러온 일정 중 플래너가 보낸 일정의 복사본(📌·✓로 시작하거나, 같은 날 같은 제목의 고정 일정·일정이 있는 것)은 빼요
+  {
+    const ruleOn = (dt, tt) => d.rules.some(r => r.active && String(r.title).trim() === tt && (r.days || []).includes(new Date(dt + 'T00:00').getDay()) && (!r.start || dt >= r.start) && (!r.until || dt <= r.until));
+    const own = new Set(d.items.filter(i => !i.g).map(i => String(i.title).trim() + '|' + i.date));
+    d.items = d.items.filter(i => { if (!i.g) return true; const raw = String(i.title || '').trim(), tt = raw.replace(/^(📌|✓)\s*/u, ''); return !(/^(📌|✓)/u.test(raw) || ruleOn(i.date, tt) || own.has(tt + '|' + i.date)); });
+  }
+  // 같은 고정 일정이 두 번 들어 있으면 하나로 합쳐요 (어느 기기에서나 같은 쪽을 남겨요)
+  {
+    const seen = new Map(), drop = new Set();
+    for (const r of [...d.rules].sort((a, b) => (b.gid ? 1 : 0) - (a.gid ? 1 : 0) || String(a.id).localeCompare(String(b.id)))) {
+      const k = [String(r.title).trim(), [...(r.days || [])].sort().join(), r.time, r.end, r.anchor, !!r.active].join('|'), kp = seen.get(k);
+      if (!kp) { seen.set(k, r); continue; }
+      drop.add(r.id);
+      if (r.gid && r.gid !== kp.gid) { if (!Array.isArray(d.gDel)) d.gDel = []; d.gDel.push(r.gid); }
+      if (d.ruleLog && d.ruleLog[r.id]) { d.ruleLog[kp.id] = { ...d.ruleLog[r.id], ...(d.ruleLog[kp.id] || {}) }; delete d.ruleLog[r.id]; }
+    }
+    if (drop.size) d.rules = d.rules.filter(r => !drop.has(r.id));
   }
   if (!d.v11) {
     // v11: '습관' 분류는 구글 캘린더로 보내지 않고, 이미 보낸 고정 일정은 이모지 없는 제목으로 다시 보내요
@@ -1079,7 +1103,7 @@ function vHome() {
   const goal = `<button class="goal" data-a="editGoal"><div class="grow"><div class="gl">큰 목표</div><div class="gt">${esc(bg.text || '큰 목표 하나를 적어 보세요')}</div><div class="gs">${bg.due ? esc(bg.due) + ' 까지' : ''}${bp ? `${bg.due ? ' · ' : ''}${esc(bp.title)} ${pct(projProgress(bp))}` : ''}${!bg.due && !bp ? '눌러서 고치기' : ''}</div></div>${bg.due ? `<span class="gd">${dday(bg.due)}</span>` : ''}</button>`;
   // 작업실 (2열: 출퇴근 | 작은 달력)
   const sess = workOf(t).map(s => `<div class="sess">출근 <input type="time" value="${esc(s.in)}" data-ws="${esc(s.id)}" data-f="in" aria-label="출근 시각"> 퇴근 ${s.out ? `<input type="time" value="${esc(s.out)}" data-ws="${esc(s.id)}" data-f="out" aria-label="퇴근 시각">` : '<b class="ok">작업 중</b>'}<button class="ic del" data-a="wsDel" data-id="${esc(s.id)}" aria-label="기록 삭제">${TRASH}</button></div>`).join('');
-  const studio = `<section class="card"><div class="studio"><div><div class="row"><h3 class="grow" style="margin:0">작업실</h3>${w ? `<span class="chip on">작업 중 · ${esc(w.in)} 출근</span>` : '<span class="chip">퇴근 상태</span>'}</div>`
+  const studio = `<section class="card"><div class="studio"><div><div class="row sthd"><h3 class="grow" style="margin:0">작업실</h3>${w ? `<span class="chip on">작업 중 · ${esc(w.in)} 출근</span>` : '<span class="chip">퇴근 상태</span>'}</div>`
     + `<div class="stat"><div><small>작업실</small><span class="big" data-live="work">${dur(wm)}</span></div><div><small>집중</small><span class="big" data-live="focusT">${dur(fm)}</span></div></div>`
     + `<div class="row" style="margin:14px 0 4px">${w ? '<button class="bigbtn dk" data-a="checkOut">퇴근하기</button>' : '<button class="bigbtn pri" data-a="checkIn">작업실 출근</button>'}<button class="bigbtn" data-a="focus">${f ? '집중 끝' : '집중 시작'}</button></div>`
     + `${sess ? `<h4>오늘 기록</h4>${sess}` : ''}</div><div>${miniCal()}</div></div></section>`;
@@ -1303,7 +1327,7 @@ function vHabit() {
     const sub = sl.k === 'h' ? `<span>${sl.h.perWeek && sl.h.perWeek < 7 ? `주 ${sl.h.perWeek}회 목표` : '매일'}</span><span>${cnt}회</span>` : sl.k === 'r' ? `<span>${esc(ruleSum(sl.r))}</span><span>${cnt}회</span>` : '<span>&nbsp;</span>';
     return `<div class="hslot">${title}<div class="hcal"><div class="hhd">${[...'MTWTFSS'].map(x => `<span>${x}</span>`).join('')}</div><div class="hgb">${cells}</div></div><div class="hcnt">${sub}</div></div>`;
   };
-  return `<div class="card hpage paper"><div class="mgoal">Month's goal<small>${y}.${String(m).padStart(2, '0')}</small></div><div class="hpg-head"><button class="ic" data-a="hcm" data-n="-1" aria-label="이전 달">${CHEV(-1)}</button><h2>${y}년 ${m}월</h2><button class="ic" data-a="hcm" data-n="1" aria-label="다음 달">${CHEV(1)}</button><button class="mini" data-a="hcm" data-n="0">이번 달</button></div>`
+  return `<div class="card hpage"><div class="mgoal">Month's goal<small>${y}.${String(m).padStart(2, '0')}</small></div><div class="hpg-head"><button class="ic" data-a="hcm" data-n="-1" aria-label="이전 달">${CHEV(-1)}</button><h2>${y}년 ${m}월</h2><button class="ic" data-a="hcm" data-n="1" aria-label="다음 달">${CHEV(1)}</button><button class="mini" data-a="hcm" data-n="0">이번 달</button></div>`
     + `<div class="hgrid3">${slots.map(cal).join('')}</div><p class="mu" style="font-size:12.5px;margin:18px 0 0">빈 회색 칸을 눌러 습관을 넣고, 날짜를 누르면 동그라미가 그려져요. 다시 누르면 지워져요. 요일·시간이 정해진 습관(예: 소금물 마시기)은 고정 일정이라 달력·오늘·주간에도 들어가요.</p></div>`;
 }
 function openHabit(id) {
@@ -1420,16 +1444,83 @@ async function colorFrom(src) {
   catch (e) { return null; }
 }
 // 책등: 표지 왼쪽 그림을 책등 배경으로 쓰고(실제 책등처럼 표지 디자인이 이어져요), 제목은 표지 색 띠 위에 세로로 써요.
+// 진짜 책등 이미지: 알라딘 상품 이미지 폴더의 책등 그림을 찾아 써요 (없으면 지금 디자인으로)
+const SPBAD = new Set();
+function jsonp(url, ms = 9000) {
+  return new Promise((res, rej) => {
+    const cb = '__al' + Math.random().toString(36).slice(2), sc = document.createElement('script');
+    const done = (v, err) => { clearTimeout(t); try { delete window[cb]; } catch (_) { window[cb] = undefined; } sc.remove(); err ? rej(err) : res(v); };
+    const t = setTimeout(() => done(null, new Error('알라딘 응답이 없어요')), ms);
+    window[cb] = (a, b) => done(a && typeof a === 'object' ? a : b);
+    sc.onerror = () => done(null, new Error('알라딘에 연결하지 못했어요'));
+    sc.src = url + '&callback=' + cb; document.head.appendChild(sc);
+  });
+}
+async function aladinItem(b) {
+  const k = (D.set.aladinKey || '').trim(); if (!k) throw new Error('설정 → 책 검색에 알라딘 TTB 키를 넣어 주세요');
+  const isbn = String(b.isbn || '').replace(/[^0-9Xx]/g, ''), base = 'https://www.aladin.co.kr/ttb/api/', q = `ttbkey=${encodeURIComponent(k)}&output=js&Version=20131101&Cover=Big`;
+  const j = isbn.length === 13 || isbn.length === 10
+    ? await jsonp(`${base}ItemLookUp.aspx?${q}&itemIdType=${isbn.length === 13 ? 'ISBN13' : 'ISBN'}&ItemId=${isbn}`)
+    : await jsonp(`${base}ItemSearch.aspx?${q}&Query=${encodeURIComponent([b.title, b.author].filter(Boolean).join(' '))}&QueryType=Keyword&MaxResults=1&SearchTarget=Book`);
+  if (j && j.errorCode) throw new Error('알라딘: ' + (j.errorMessage || '오류 ' + j.errorCode));
+  const it = ((j && j.item) || [])[0]; if (!it) throw new Error('알라딘에서 이 책을 찾지 못했어요');
+  return it;
+}
+const spineCands = cover => { const m = String(cover || '').match(/^https?:\/\/image\.aladin\.co\.kr\/product\/(\d+)\/(\d+)\/[^/]+\/([^/]+?)_\d+\.(?:jpe?g|png|gif)/i); if (!m) return []; const p = `https://image.aladin.co.kr/product/${m[1]}/${m[2]}/`, c = m[3]; return [`${p}spineflip/${c}_d.jpg`, `${p}spineflip/${c}_d.png`, `${p}letslook/${c}_s.jpg`, `${p}spine/${c}_d.jpg`]; };
+const probeImg = u => new Promise(res => { const i = new Image(); i.referrerPolicy = 'no-referrer'; const t = setTimeout(() => res(null), 8000); i.onload = () => { clearTimeout(t); res(i.naturalWidth && i.naturalHeight ? { u, ar: i.naturalWidth / i.naturalHeight } : null); }; i.onerror = () => { clearTimeout(t); res(null); }; i.src = u; });
+async function findSpine(b) {
+  const it = await aladinItem(b);
+  for (const u of spineCands(it.cover)) { const r = await probeImg(u); if (r && r.ar < .45) return { url: r.u, ar: r.ar, it }; }
+  return { url: '', ar: 0, it };
+}
+const aladinCover = it => String(it.cover || '').replace(/^http:/, 'https:').replace(/\/cover(sum|150|200)?\//, '/cover500/');
+document.addEventListener('load', e => {
+  const im = e.target; if (!im.classList || !im.classList.contains('spreal')) return;
+  const b = by(D.books, im.dataset.spid); if (!b || !im.naturalHeight) return;
+  const ar = im.naturalWidth / im.naturalHeight;
+  if (ar >= .45) { SPBAD.add(b.spineUrl); render(); return; }   // 책등이 아닌 그림이면 원래 디자인으로
+  if (!b.spineAR || Math.abs(b.spineAR - ar) / ar > .03) { b.spineAR = +ar.toFixed(4); const bt = im.closest('.spine'), H = parseFloat(bt.style.getPropertyValue('--h')); bt.style.setProperty('--w', Math.round(Math.max(9, Math.min(48, H * ar))) + 'px'); save(); }
+}, true);
+document.addEventListener('error', e => { const im = e.target; if (im.classList && im.classList.contains('spreal')) { const b = by(D.books, im.dataset.spid); if (b) { SPBAD.add(b.spineUrl); render(); } } }, true);
+async function spineFind() {
+  const f = $('#m form.bookf'), out = $('#bspnote'); if (!f || !bdraft) return;
+  const el = k => f.elements.namedItem(k);
+  Object.assign(bdraft, { title: el('title').value.trim(), author: el('author').value.trim() });
+  out.textContent = '알라딘에서 찾는 중…';
+  try {
+    const r = await findSpine(bdraft);
+    if (!bdraft.isbn && r.it.isbn13) bdraft.isbn = r.it.isbn13;
+    if (!el('cover').value && !String(bdraft.cover).startsWith('idb:') && r.it.cover) { el('cover').value = aladinCover(r.it); bdraft.cover = el('cover').value; refreshCover(); }
+    if (!r.url) { out.textContent = '알라딘에 이 책의 책등 이미지가 없어요. 알라딘·예스24 상세 페이지의 책등 그림 주소를 붙여 넣거나, 책등 사진을 올려 주세요.'; return; }
+    el('spineUrl').value = r.url; bdraft.spineAR = r.ar; f.querySelector('input[name=spine][value=real]').checked = true;
+    out.textContent = '책등 이미지를 찾았어요'; spinePrev();
+  } catch (e) { out.textContent = e.message; }
+}
+const spinePrev = () => { const f = $('#m form.bookf'), p = $('#bsprev'); if (!f || !p) return; const u = safeUrl(f.elements.namedItem('spineUrl').value.trim()); p.innerHTML = u ? `<img src="${esc(u)}" alt="책등 미리보기" referrerpolicy="no-referrer">` : ''; };
+async function spineAll() {
+  if (!(D.set.aladinKey || '').trim()) { toast('설정 → 책 검색에 알라딘 TTB 키를 먼저 넣어 주세요', 'bad'); return; }
+  const list = D.books.filter(b => b.spine !== 'photo' && !(b.spine === 'real' && b.spineUrl && !SPBAD.has(b.spineUrl))); let ok = 0, none = 0, bad = 0;
+  if (!list.length) { toast('바꿀 책이 없어요'); return; }
+  for (const [i, b] of list.entries()) {
+    toast(`책등 찾는 중 ${i + 1}/${list.length} · ${b.title}`);
+    try { const r = await findSpine(b); if (!b.isbn && r.it.isbn13) b.isbn = r.it.isbn13; if (!b.cover && r.it.cover) b.cover = aladinCover(r.it); if (r.url) { Object.assign(b, { spine: 'real', spineUrl: r.url, spineAR: +r.ar.toFixed(4) }); ok++; } else none++; }
+    catch (e) { bad++; if (/TTB|키|ttbkey|Key/i.test(e.message)) { toast(e.message, 'bad'); break; } }
+  }
+  save(); toast(`책등 이미지 ${ok}권 찾았어요${none ? ` · ${none}권은 알라딘에 책등이 없어요` : ''}${bad ? ` · ${bad}권은 찾지 못했어요` : ''}`);
+}
 function spineHTML(b) {
   const mob = isMobile(), pages = +b.pages || 260, h0 = hashN(b.id);
   const w = Math.round(Math.max(12, Math.min(28, pages / 18 + 6)) * (mob ? .85 : 1)), h = (mob ? 92 : 114) + (h0 % 6) * (mob ? 4 : 5);
   const c = bookColor(b), ink = inkOn(c), fs = w < 15 ? 7.5 : w < 21 ? 8.5 : 9.5;
-  const art = (b.spine === 'auto' || b.spine === 'cover') && b.cover, ph = b.spine === 'photo' && b.spineImg;
-  const inner = ph ? imgTag(b.spineImg, 'spimg', b.title)
+  const real = b.spine === 'real' && !!b.spineUrl && !SPBAD.has(b.spineUrl);
+  const art = (b.spine === 'auto' || b.spine === 'cover' || (b.spine === 'real' && !real)) && b.cover, ph = b.spine === 'photo' && b.spineImg;
+  let W = w, H = h;
+  if (real) { H = Math.min(mob ? 114 : 146, Math.round(h * (mob ? 1.2 : 1.25))); W = b.spineAR ? Math.round(Math.max(9, Math.min(48, H * b.spineAR))) : w; }
+  const inner = real ? `<img class="spreal" src="${esc(b.spineUrl)}" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" data-spid="${esc(b.id)}">` : ph ? imgTag(b.spineImg, 'spimg', b.title)
     : `${art ? imgTag(b.cover, 'spcov', '') : `<span class="sp-band b${h0 % 4}"></span>`}<span class="sp-t">${esc(b.title)}</span>${b.author && w >= 15 && !art ? `<span class="sp-a">${esc(b.author)}</span>` : ''}<span class="sp-logo">${esc((b.publisher || '').slice(0, 3))}</span>`;
   const memo = String(b.memo || '').trim();
   const pop = `<span class="bpop" aria-hidden="true"><span class="bpc" style="--c:${c};--ink:${ink}">${b.cover ? imgTag(b.cover, '', '') : esc(b.title)}</span>${memo ? `<span class="bmemo">${esc(memo.length > 70 ? memo.slice(0, 70) + '…' : memo)}</span>` : ''}<span class="bnote"><b>${esc(b.title)}</b>${b.author ? `<span>${esc(b.author)}</span>` : ''}<span>${b.status === '다 읽음' ? esc(longDate(b.end)) : esc(b.status)}${b.fav ? ' · 인생책 ♥' : ''}</span></span></span>`;
-  return `<div class="bk">${mob ? '' : pop}<button class="spine${art ? ' art' : ''}${b.status === '읽는 중' ? ' reading' : ''}${b.status === '멈춤' ? ' paused' : ''}" style="--w:${w}px;--h:${h}px;--c:${c};--ink:${ink};--fs:${fs}px" data-a="bookOpen" data-id="${esc(b.id)}" aria-label="${esc(b.title)}, ${esc(b.status)}">${inner}</button></div>`;
+  return `<div class="bk">${mob ? '' : pop}<button class="spine${real ? ' real' : art ? ' art' : ''}${b.status === '읽는 중' ? ' reading' : ''}${b.status === '멈춤' ? ' paused' : ''}" style="--w:${W}px;--h:${H}px;--c:${c};--ink:${ink};--fs:${fs}px" data-a="bookOpen" data-id="${esc(b.id)}" aria-label="${esc(b.title)}, ${esc(b.status)}">${inner}</button></div>`;
 }
 function yearStats(y, bs) {
   const done = bs.filter(b => b.status === '다 읽음'), pages = done.reduce((s, b) => s + (+b.pages || 0), 0);
@@ -1453,7 +1544,7 @@ function vBooks() {
     const sh = y => { const bs = B.filter(b => b.status !== '읽고 싶음' && bookYear(b) === y).sort((a, b) => (a.end || a.start || '9999').localeCompare(b.end || b.start || '9999') || (a.createdAt || 0) - (b.createdAt || 0)); return shelfHTML(y, y, bs, y === t.slice(0, 4) ? '＋ 책 추가로 올해 첫 책을 꽂아 보세요' : '이 해에 꽂힌 책이 없어요'); };
     const wish = () => shelfHTML('wish', '읽고 싶은 책', B.filter(b => b.status === '읽고 싶음'), '읽고 싶은 책을 모아 두세요', false);
     body = chips + (byear === '전체' ? years.map(sh).join('') + wish() : byear === '읽고 싶은 책' ? wish() : sh(byear))
-      + `<p class="mu" style="font-size:12.5px">책등에 마우스를 올리면 표지와 메모가 보이고, 누르면 중요 구절을 페이지와 함께 기록해요. 책등 두께는 쪽수, 빨간 책갈피는 읽는 중이에요.</p>`;
+      + `<p class="mu" style="font-size:12.5px">책등에 마우스를 올리면 표지와 메모가 보이고, 누르면 중요 구절을 페이지와 함께 기록해요. 진짜 책등 이미지가 없는 책은 두께를 쪽수로 그려요. 빨간 책갈피는 읽는 중이에요.</p><div class="set-row"><button class="mini" data-a="spineAll">알라딘 책등 이미지 한꺼번에 찾기</button>${D.set.aladinKey ? '' : '<small class="mu">설정 → 책 검색에 알라딘 TTB 키를 넣으면 쓸 수 있어요</small>'}</div>`;
   } else if (bview === 'cal') body = readCal();
   else {
     const qs = B.flatMap(b => b.quotes.map(q => ({ q, b }))).sort((x, y) => (x.b.title.localeCompare(y.b.title)) || ((parseInt(x.q.page) || 0) - (parseInt(y.q.page) || 0)));
@@ -1539,13 +1630,15 @@ function openBookEdit(id, pre = {}) {
 <div class="g2"><label>저자<input name="author" value="${esc(b.author)}"></label><label>출판사<input name="publisher" value="${esc(b.publisher)}"></label><label>쪽수<input name="pages" type="number" min="1" value="${esc(b.pages)}"></label><label>분야<input name="genre" list="genres" value="${esc(b.genre || '')}" placeholder="예: 현대소설"><datalist id="genres">${GENRES.map(g => `<option value="${g}">`).join('')}</datalist></label><label>상태<select name="status">${BST.map(s => `<option${b.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></label><label class="ck" style="align-self:end;margin-bottom:8px!important"><input type="checkbox" name="fav"${b.fav ? ' checked' : ''}>인생책 ♥</label><label>읽기 시작<input type="date" name="start" value="${esc(b.start)}"></label><label>다 읽은 날<input type="date" name="end" value="${esc(b.end)}"></label></div>
 <label>표지</label><div class="row" id="bcovrow">${bookCoverPrev()}<div class="grow" style="display:flex;flex-direction:column;gap:6px"><label class="filebtn" style="align-self:flex-start">표지 사진 올리기<input type="file" accept="image/*" data-bfile="cover"></label><input name="cover" value="${esc(String(b.cover).startsWith('idb:') ? '' : b.cover)}" placeholder="또는 표지 이미지 주소 (https://)" aria-label="표지 이미지 주소"></div></div>
 <label>책등 색 <small id="bcolnote">${b.colorAuto ? '표지에서 뽑은 색이에요' : ''}</small></label><div class="cpick"><span class="cswatch" id="bsw" style="--c:${bookColor(b)}"></span><input type="color" name="color" value="${bookColor(b)}" aria-label="책등 색"><button type="button" class="mini" data-a="bookColor">표지에서 색 다시 뽑기</button>${SPINE_FALL.slice(0, 8).map(c => `<button type="button" class="cswatch" style="--c:${c};width:22px;height:22px;padding:0;border:0" data-a="bookSw" data-c="${c}" aria-label="색 ${c}"></button>`).join('')}</div>
-<label>책등 모양</label><div class="row">${[['auto', '표지 그림 + 제목 (자동)'], ['color', '색 + 제목'], ['photo', '내 책등 사진']].map(([v, l]) => `<label class="ck"><input type="radio" name="spine" value="${v}"${(b.spine === v || (v === 'auto' && b.spine === 'cover')) ? ' checked' : ''}>${l}</label>`).join('')}<label class="filebtn">책등 사진 올리기<input type="file" accept="image/*" data-bfile="spine"></label></div>
+<label>책등 모양</label><div class="row">${[['real', '진짜 책등 이미지'], ['auto', '표지 그림 + 제목'], ['color', '색 + 제목'], ['photo', '내 책등 사진']].map(([v, l]) => `<label class="ck"><input type="radio" name="spine" value="${v}"${(b.spine === v || (v === 'auto' && b.spine === 'cover')) ? ' checked' : ''}>${l}</label>`).join('')}<label class="filebtn">책등 사진 올리기<input type="file" accept="image/*" data-bfile="spine"></label></div>
+<div class="row" style="align-items:flex-start;gap:10px"><div class="bsprev" id="bsprev">${b.spineUrl ? `<img src="${esc(b.spineUrl)}" alt="책등 미리보기" referrerpolicy="no-referrer">` : ''}</div><div class="grow" style="display:flex;flex-direction:column;gap:6px"><div class="row"><button type="button" class="mini" data-a="bookSpineFind">알라딘에서 책등 찾기</button><small class="mu" id="bspnote">${D.set.aladinKey ? '' : '알라딘 TTB 키를 넣으면 자동으로 찾아요 (설정 → 책 검색)'}</small></div><input name="spineUrl" data-spurl="1" value="${esc(b.spineUrl || '')}" placeholder="책등 이미지 주소 (https://) — 알라딘·예스24에서 책등 그림 주소 복사" aria-label="책등 이미지 주소"></div></div>
 <div class="row end">${nw ? '' : `<button type="button" class="dg" data-a="bookDel" data-id="${esc(b.id)}">${TRASH} 삭제</button>`}<span class="grow"></span><button value="no" formnovalidate>닫기</button><button value="ok" class="pri">저장</button></div></form>`;
   m.onclose = () => {
     if (m.returnValue !== 'ok') { bdraft = null; return; }
     const f = m.querySelector('form'), el = k => f.elements.namedItem(k);
     const url = el('cover').value.trim(), oldCover = b.cover, oldSpine = b.spineImg;
     Object.assign(b, { title: el('title').value.trim(), author: el('author').value.trim(), publisher: el('publisher').value.trim(), pages: num(el('pages').value) || '', genre: el('genre').value.trim(), fav: el('fav').checked, status: el('status').value, start: el('start').value, end: el('end').value, color: el('color').value, colorAuto: bdraft.colorAuto, spine: f.querySelector('input[name=spine]:checked')?.value || 'auto', isbn: bdraft.isbn || b.isbn || '' });
+    { const su = safeUrl(el('spineUrl').value.trim()); if (su !== (b.spineUrl || '')) { b.spineUrl = su; b.spineAR = su && su === bdraft.spineUrlFound ? bdraft.spineAR : (bdraft.spineAR || 0); } if (su) SPBAD.delete(su); if (b.spine === 'real' && !su) b.spine = 'auto'; }
     b.cover = String(bdraft.cover).startsWith('idb:') && !url ? bdraft.cover : safeUrl(url) || (String(bdraft.cover).startsWith('idb:') ? bdraft.cover : '');
     if (bdraft.spineImg) b.spineImg = bdraft.spineImg;
     for (const [o, n] of [[oldCover, b.cover], [oldSpine, b.spineImg]]) if (o && o !== n && String(o).startsWith('idb:')) forget(o.slice(4));
@@ -1677,7 +1770,7 @@ function vSet() {
 <div class="g2"><label>시간 있는 일정의 기본 알림<select data-s="defRemind">${opt(REM_T.filter(r => r[0] !== 'eve'), S.defRemind)}</select></label><label>아침 요약 (오늘 일정)${TP('data-s="morning"', S.morning, { lab: '아침 요약' })}</label><label>전날 저녁 요약 (내일 일정)${TP('data-s="evening"', S.evening, { lab: '저녁 요약' })}</label><label>주간 계획 알림<span class="row" style="margin-top:3px"><select data-s="planDay">${[0, 1, 2, 3, 4, 5, 6].map(i => `<option value="${i}"${+S.planDay === i ? ' selected' : ''}>${DOW[i]}요일</option>`).join('')}</select>${TP('data-s="planTime"', S.planTime, { lab: '주간 계획 알림' })}</span></label></div></div>
 <div class="card"><h3>구글 드라이브 자동 동기화</h3><p class="mu">노트북과 휴대폰이 같은 기록을 쓰도록, 기록을 내 구글 드라이브의 숨김 앱 폴더에 저장하고 서로 맞춰요. 사진·책 표지도 함께 올라가요. 드라이브 화면에는 보이지 않고 이 플래너만 열어 볼 수 있어요.</p>${preloadGSI() || ''}
 <p>상태: <b id="syncOut">${esc(syncStatusText())}</b></p>
-<div class="set-row"><label class="ck"><input type="checkbox" data-sync="on"${SY.on ? ' checked' : ''}>이 기기에서 자동 동기화</label><button class="pri" data-a="driveSync">지금 동기화</button><button data-a="phoneLink">휴대폰 연결 주소 만들기</button></div>
+<div class="set-row"><label class="ck"><input type="checkbox" data-sync="on"${SY.on ? ' checked' : ''}>이 기기에서 자동 동기화</label><label class="ck"><input type="checkbox" data-sync="autoRe"${SY.autoRe === false ? '' : ' checked'}>연결이 끊기면 화면을 누를 때 자동으로 다시 연결</label><button class="pri" data-a="driveSync">지금 동기화</button><button data-a="phoneLink">휴대폰 연결 주소 만들기</button></div>
 <details><summary>처음 한 번 설정하기</summary><ol class="howto"><li>아래 '구글 캘린더 연동'의 1~7단계를 먼저 해요 (같은 구글 설정을 같이 써요). 3단계에서 <b>Google Drive API</b>도 '사용'으로 켜 주세요.</li><li>노트북에서 플래너 사이트 주소(https)로 열어요. 다른 주소에서 쓰던 기록은 그쪽에서 동기화를 켜 두었다면 '드라이브 기록 가져오기'로, 아니면 JSON 백업 '가져오기'로 옮겨요.</li><li>'이 기기에서 자동 동기화'를 켜고, 구글 로그인 창에서 캘린더와 드라이브 항목을 모두 허용해요.</li><li>'휴대폰 연결 주소 만들기'를 눌러 나온 주소를 휴대폰으로 보내 열어요. 오른쪽 위 구름 버튼을 누르고 '드라이브 기록 가져오기'를 고르면 끝이에요. 사파리 공유 → '홈 화면에 추가'를 해 두면 앱처럼 열려요.</li></ol></details>
 <details><summary>어떻게 맞춰지나요?</summary><ul class="howto"><li>고칠 때마다 몇 초 뒤 자동으로 올리고, 화면을 다시 열거나 1분 30초마다 다른 기기의 변경을 받아 와요.</li><li>구글 보안 정책상 로그인은 1시간 동안만 유지돼요. 그래서 플래너를 열 때마다 오른쪽 위 <b>'동기화 연결'</b> 구름 버튼을 한 번 눌러 주세요. 연결 안 된 동안 고친 내용도 이 기기에 저장돼 있다가 연결하면 올라가요.</li><li>두 기기에서 따로 고쳐도 일정·책·사진 단위로 합쳐요. 같은 일정을 양쪽에서 다르게 고쳤다면 항목별로 맞추고, 정말 같은 칸이 부딪히면 지금 기기의 내용이 남아요.</li><li>원본 사진은 크게 볼 때 받아 와요 (휴대폰 데이터를 아끼려고요). 5MB가 넘는 사진은 올릴 때 조금 줄여서 올려요.</li></ul></details></div>
 <div class="card"><h3>구글 캘린더 연동</h3><p class="mu">상태: ${live ? '<span class="ok">연결됨</span>' : '연결 안 됨'} · 아직 구글에 반영 안 된 변경 ${pend}건</p>
@@ -1700,8 +1793,10 @@ function vSet() {
 <div class="card"><h3>백업</h3><p class="mu">기록은 이 브라우저에만 저장돼요. 다른 기기로 옮기거나 지켜 두려면 가끔 내보내 주세요. 마지막 백업: ${S.lastBackup ? new Date(S.lastBackup).toLocaleDateString('ko-KR') : '없음'}</p><div class="set-row"><button data-a="exp">JSON 내보내기</button><label class="filebtn">JSON 가져오기<input type="file" accept=".json,application/json" data-imp="1"></label><button data-a="xl">엑셀로 내보내기</button></div></div>
 <div class="card"><h3>책 검색</h3><p class="mu">책 찾기는 카카오 → 구글 북스 → 열린 도서관(Open Library) 순서로 시도해요. 구글 북스는 키 없이 쓰면 전 세계 사용자가 하루 한도를 함께 써서 자주 막히니, 아래 키 중 하나를 넣어 두면 안정적이에요. 한국 책은 카카오가 가장 잘 찾아요.</p>
 <label>카카오 REST API 키 (추천)<input data-s="kakaoKey" value="${esc(S.kakaoKey)}" placeholder="developers.kakao.com → 내 애플리케이션 → 앱 키 → REST API 키" autocomplete="off"></label>
+<label>알라딘 TTB 키 (진짜 책등 이미지)<input data-s="aladinKey" value="${esc(S.aladinKey || '')}" placeholder="알라딘 OpenAPI에서 받은 TTBKey (ttb로 시작)" autocomplete="off"></label>
 <label>구글 북스 API 키 (선택)<input data-s="booksKey" value="${esc(S.booksKey)}" placeholder="console.cloud.google.com → Books API 사용 → 사용자 인증 정보 → API 키" autocomplete="off"></label>
 <details><summary>카카오 키 받는 법 (5분)</summary><ol class="howto"><li>developers.kakao.com 에 카카오 계정으로 로그인해요.</li><li>'내 애플리케이션 → 애플리케이션 추가하기'로 앱을 하나 만들어요 (이름은 아무거나, 예: 내 플래너).</li><li>만든 앱의 '앱 키'에서 <b>REST API 키</b>를 복사해 위 칸에 붙여 넣어요. (JavaScript 키·Admin 키가 아니에요)</li><li>독서기록 → 책 추가 → 찾기를 눌러 보세요.</li></ol></details>
+<details><summary>알라딘 TTB 키 받는 법 (책등 이미지용, 무료)</summary><ol class="howto"><li>알라딘에 로그인한 뒤, 알라딘 OpenAPI 안내 페이지(www.aladin.co.kr/ttb/apiguide.aspx)에서 TTB 키 발급을 눌러요.</li><li>사이트(블로그) 주소를 적는 칸에 이 플래너 주소를 넣고 신청해요.</li><li>받은 TTBKey(ttb로 시작)를 위 칸에 붙여 넣어요.</li><li>책 추가에서 책을 고르면 책등 이미지를 자동으로 찾고, 독서기록 → 책장 아래 '한꺼번에 찾기'로 이미 꽂힌 책도 바꿀 수 있어요. 알라딘에 책등 이미지가 없는 책은 지금 디자인으로 그려요.</li></ol></details>
 <div class="set-row"><button data-a="bookTest">검색 시험해 보기</button><small id="bookTestOut"></small></div></div>
 <div class="card"><h3>사진 · 표지 백업</h3><p class="mu">사진 캘린더의 사진과 직접 올린 책 표지·책등 사진은 용량이 커서 위의 JSON 백업과 따로, 이 브라우저 안에 보관돼요. 다른 기기로 옮기거나 지켜 두려면 이 파일도 내보내 주세요.</p><div class="set-row"><button data-a="mediaExp">사진·표지 내보내기</button><label class="filebtn">사진·표지 가져오기<input type="file" accept=".json,application/json" data-mimp="1"></label></div></div>`;
 }
@@ -1991,17 +2086,22 @@ function liveTick() { // 1초마다 숫자만 바꿔요 (화면 전체를 다시
 const lit = src => new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error('스크립트를 불러오지 못했어요')); document.head.appendChild(e); });
 const tokLive = () => !!tok && Date.now() < tokExp;
 const calLive = () => tokLive() && !!D.set.calAuto;
+const GSCOPE = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata';
+// 받은 열쇠(토큰)는 만료 전까지 이 기기에 기억해 두어, 다시 열어도 바로 이어서 동기화해요
+function onTok(r) { tok = r.access_token || null; tokScope = r.scope || ''; tokExp = Date.now() + ((r.expires_in || 3600) - 60) * 1000; saveTok(); }
+function saveTok() { try { if (tok) localStorage.setItem('planner.tok', JSON.stringify({ t: tok, s: tokScope, e: tokExp, c: (D.set.cid || '').trim() })); else localStorage.removeItem('planner.tok'); } catch (_) { } }
+function dropTok() { tok = null; tokExp = 0; saveTok(); }
 async function gAuth() {
   const id = D.set.cid.trim();
   if (!id) { toast('설정에서 OAuth 클라이언트 ID를 먼저 넣어 주세요', 'bad'); return false; }
   if (!/^https:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) throw new Error('파일로 연 플래너에서는 구글 연결이 안 돼요. 플래너 사이트 주소(https://…)로 열어 주세요');
   if (!window.google?.accounts) await lit('https://accounts.google.com/gsi/client');
-  return new Promise(res => google.accounts.oauth2.initTokenClient({ client_id: id, scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata', prompt: '', callback: r => { tok = r.access_token || null; tokScope = r.scope || ''; tokExp = Date.now() + ((r.expires_in || 3600) - 60) * 1000; res(!!tok); }, error_callback: () => res(false) }).requestAccessToken());
+  return new Promise(res => google.accounts.oauth2.initTokenClient({ client_id: id, scope: GSCOPE, prompt: '', ...(SY.email ? { login_hint: SY.email } : {}), callback: r => { onTok(r); res(!!tok); }, error_callback: () => res(false) }).requestAccessToken());
 }
 async function G(path, o = {}) {
   if (!tokLive()) { tok = null; if (!await gAuth()) throw new Error('구글에 연결되지 않았어요'); }
   const r = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/' + path, { ...o, headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' } });
-  if (r.status === 401) { tok = null; throw new Error('구글 연결이 만료됐어요. 다시 연결해 주세요'); }
+  if (r.status === 401) { dropTok(); throw new Error('구글 연결이 만료됐어요. 다시 연결해 주세요'); }
   if (r.status === 204) return {};
   const j = await r.json().catch(() => ({}));
   if (!r.ok) { const e = new Error(j.error?.message || '구글 오류 ' + r.status); e.status = r.status; throw e; }
@@ -2115,11 +2215,11 @@ async function pull() {
   const old = new Map(D.items.filter(i => i.g).map(i => [i.gid, i]));
   D.items = D.items.filter(i => !i.g);
   for (const e of r.items || []) {
-    if (mine.has(e.id) || mine.has(e.recurringEventId) || e.status === 'cancelled' || isMine(e)) continue;
+    if (mine.has(e.id) || mine.has(e.recurringEventId) || e.status === 'cancelled' || isMine(e) || /^(📌|✓)/u.test(String(e.summary || '').trim())) continue;
     const s = e.start.dateTime || e.start.date, en = e.end?.dateTime || '', prev = old.get(e.id) || {};
     D.items.push({ id: prev.id || uid(), g: 1, gid: e.id, title: e.summary || '(제목 없음)', date: s.slice(0, 10), time: e.start.dateTime ? s.slice(11, 16) : '', end: en ? en.slice(11, 16) : '', gcolor: +e.colorId || 0, cat: (D.cats.find(c => String(c.g) === String(e.colorId)) || {}).id || '', memo: prev.memo || '', done: !!prev.done, projectId: '', order: 0, pri: '', remind: 'none', rolled: 0, hist: [] });
   }
-  save(); toast(`구글 일정 ${D.items.filter(i => i.g).length}개를 불러왔어요`);
+  D = normalize(D); save(); toast(`구글 일정 ${D.items.filter(i => i.g).length}개를 불러왔어요`);
 }
 async function weeklyToggle() {
   const S = D.set;
@@ -2135,7 +2235,25 @@ const DRV = 'https://www.googleapis.com/drive/v3', DRU = 'https://www.googleapis
 const SY = (() => { try { return JSON.parse(localStorage.getItem('planner.sync') || '{}'); } catch { return {}; } })();
 const saveSY = () => { try { localStorage.setItem('planner.sync', JSON.stringify(SY)); } catch { } };
 let pendingRender = false, syncing = false, syncAgain = false, syncT = null, syncState = 'off', syncMsg = '', remoteMedia = null;
-const SYNC_LABEL = { off: '', login: '동기화 연결', busy: '동기화 중', ok: '동기화됨', wait: '저장 대기', err: '동기화 오류' };
+const SYNC_LABEL = { off: '', login: '동기화 연결', busy: '동기화 중', ok: '동기화됨', wait: '저장 대기', err: '동기화 오류', off2: '오프라인' };
+(() => { try { const o = JSON.parse(localStorage.getItem('planner.tok') || 'null'); if (o && o.e > Date.now() + 30e3 && o.c === (D.set.cid || '').trim()) { tok = o.t; tokScope = o.s || ''; tokExp = o.e; } } catch (_) { } })();
+let syncRetry = 0, reauthAt = 0;
+// 연결이 끊겼으면(1시간 만료) 화면을 처음 누를 때 구글 창을 잠깐 띄워 자동으로 다시 이어요. 버튼을 누른 순간에만 구글 창을 열 수 있어서 이렇게 해요.
+function quickAuth() {
+  const id = (D.set.cid || '').trim();
+  if (!id || !window.google?.accounts?.oauth2 || !/^https:$/.test(location.protocol)) return false;
+  reauthAt = Date.now(); syncUI('busy', '다시 연결하는 중');
+  google.accounts.oauth2.initTokenClient({ client_id: id, scope: GSCOPE, prompt: '', ...(SY.email ? { login_hint: SY.email } : {}), callback: r => { onTok(r); if (tok) { driveSync(false); if (calLive()) syncAll().then(persist).catch(syncErr); } else syncUI('login'); }, error_callback: () => syncUI('login', '눌러서 구글에 연결하면 동기화돼요') }).requestAccessToken();
+  return true;
+}
+document.addEventListener('click', e => {
+  if (!SY.on || !SY.fileId || SY.autoRe === false || Date.now() - reauthAt < 45e3) return;
+  if (tokLive() && tokExp - Date.now() > 4 * 60e3) return;
+  if (e.target.closest && e.target.closest('#syncb, #m, #ask, #pv')) return;
+  quickAuth();
+}, true);
+window.addEventListener('online', () => { if (SY.on && tokLive()) { syncRetry = 0; driveSync(false); } });
+window.addEventListener('offline', () => { if (SY.on) syncUI('off2', '인터넷이 끊겨 있어요. 바뀐 내용은 이 기기에 저장돼 있고, 연결되면 다시 맞춰요'); });
 const hasDriveScope = () => !tokScope || /drive\.appdata/.test(tokScope);
 const typing = () => { const a = document.activeElement; return !!a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && $('#v').contains(a); };
 const preloadGSI = () => { if (D.set.cid && !window.google?.accounts && !preloadGSI.p) preloadGSI.p = lit('https://accounts.google.com/gsi/client').catch(() => { preloadGSI.p = null; }); };
@@ -2160,7 +2278,7 @@ function scheduleSync(ms = 4000) {
 async function DR(url, o = {}) {
   if (!tokLive()) { tok = null; if (!await gAuth()) throw new Error('구글에 연결하지 못했어요'); }
   const r = await fetch(url, { ...o, headers: { Authorization: 'Bearer ' + tok, ...(o.headers || {}) } });
-  if (r.status === 401) { tok = null; throw Object.assign(new Error('구글 연결이 만료됐어요. 구름 버튼을 다시 눌러 주세요'), { status: 401 }); }
+  if (r.status === 401) { dropTok(); throw Object.assign(new Error('구글 연결이 만료됐어요. 화면을 한 번 누르면 다시 연결해요'), { status: 401 }); }
   if (!r.ok) {
     const j = await r.json().catch(() => ({})), m = j.error?.message || '';
     const msg = /has not been used|is disabled|accessNotConfigured/i.test(m + (j.error?.errors?.[0]?.reason || '')) ? '구글 클라우드에서 Google Drive API를 "사용"으로 켜 주세요' : /insufficient|scope/i.test(m) ? '드라이브 권한이 없어요. 연결할 때 드라이브 항목에도 체크해 주세요' : /storageQuota|quota/i.test(m) ? '구글 저장 공간이 가득 찼어요' : (m || '드라이브 오류 ' + r.status);
@@ -2243,6 +2361,7 @@ async function driveSync(manual = false) {
   syncing = true; clearTimeout(syncT); syncUI('busy');
   try {
     if (!tokLive() && !await gAuth()) throw new Error('구글에 연결하지 못했어요 (팝업이 막혔다면 허용해 주세요)');
+    if (!SY.email) { try { const a = await (await DR(`${DRV}/about?fields=user(emailAddress)`)).json(); if (a.user?.emailAddress) { SY.email = a.user.emailAddress; saveSY(); } } catch (_) { } }
     if (!hasDriveScope()) throw new Error('드라이브 권한이 허락되지 않았어요. 다시 연결하면서 드라이브 항목에 체크해 주세요');
     let f = SY.fileId ? await fileMeta(SY.fileId) : null;
     if (!f || f.trashed) f = await findDataFile();
@@ -2273,10 +2392,20 @@ async function driveSync(manual = false) {
     try { localStorage.setItem('planner.sync.base', outTxt); } catch { }
     if (changed) { if (typing()) pendingRender = true; else render(); if (manual || pick) toast(pick === 'remote' ? '드라이브 기록을 가져왔어요' : '다른 기기의 변경을 합쳤어요'); }
     await syncMedia();
-    syncUI('ok');
+    syncUI('ok'); syncRetry = 0;
     if (calLive() && !D.gClean11) syncAll().then(() => { persist(); render(); }).catch(syncErr);
     if (manual && !changed && !pick) toast('드라이브와 맞췄어요');
-  } catch (e) { console.warn(e); syncUI('err', e.message); if (manual) toast('동기화 실패: ' + e.message, 'bad'); }
+  } catch (e) {
+    console.warn(e);
+    const net = !navigator.onLine || e instanceof TypeError, busy = e.status === 429 || e.status >= 500;
+    if (net || busy) {   // 잠깐 끊긴 거라면 조금 뒤에 알아서 다시 해요
+      syncRetry = Math.min(syncRetry ? syncRetry * 2 : 15e3, 5 * 60e3);
+      syncUI(net ? 'off2' : 'wait', (net ? '인터넷이 끊겨 있어요' : '구글이 바빠요') + ` · ${Math.round(syncRetry / 1000)}초 뒤 다시 맞춰요`);
+      clearTimeout(syncT); syncT = setTimeout(() => driveSync(false), syncRetry);
+      if (manual) toast('지금은 연결이 안 돼요. 잠시 뒤 알아서 다시 맞춰요', 'bad');
+    } else if (e.status === 401 || !tokLive()) { syncUI('login', '연결이 만료됐어요. 화면을 한 번 누르면 다시 연결해요'); if (manual) toast(e.message, 'bad'); }
+    else { syncUI('err', e.message); if (manual) toast('동기화 실패: ' + e.message, 'bad'); }
+  }
   finally { syncing = false; if (syncAgain) { syncAgain = false; scheduleSync(600); } }
 }
 // 사진·표지: 기록에 쓰인 것만 올리고, 작은 사진·표지는 바로 받고, 원본 사진은 크게 볼 때 받아요.
@@ -2324,7 +2453,8 @@ function phoneLink() {
   history.replaceState(null, '', location.pathname + location.search);
   setTimeout(() => toast('구글 설정을 받았어요. 오른쪽 위 구름 버튼을 눌러 연결하면 다른 기기 기록을 불러와요'), 400);
 })();
-document.addEventListener('visibilitychange', () => { if (SY.on && tokLive()) driveSync(false); });
+document.addEventListener('visibilitychange', () => { if (document.hidden || !SY.on) return; if (tokLive()) driveSync(false); else syncUI('login', '화면을 한 번 누르면 다시 연결해요'); });
+if (SY.on) { preloadGSI(); if (tokLive()) setTimeout(() => driveSync(false), 800); }
 document.addEventListener('focusout', () => { if (pendingRender) setTimeout(() => { if (pendingRender && !typing() && !$('#m').open) { pendingRender = false; render(); } }, 60); });
 setInterval(() => { if (SY.on && tokLive() && !document.hidden) driveSync(false); }, 90e3);
 
@@ -2445,7 +2575,9 @@ const A = {
   bookEdit: d => openBookEdit(d.id),
   bookDel: d => delBook(d.id),
   bookFind: () => runBookSearch(),
-  bookPick: d => { const r = bres[+d.i], f = $('#m form.bookf'); if (!r || !f) return; const el = k => f.elements.namedItem(k); el('title').value = r.title; el('author').value = r.author; el('publisher').value = r.publisher; el('pages').value = r.pages; el('cover').value = r.cover; Object.assign(bdraft, { title: r.title, cover: r.cover, isbn: r.isbn }); $('#bres').innerHTML = `<small class="ok">'${esc(r.title)}' 정보를 채웠어요.</small>`; refreshCover(); setDraftColor(r.cover); },
+  bookSpineFind: () => spineFind(),
+  spineAll: () => spineAll(),
+  bookPick: d => { const r = bres[+d.i], f = $('#m form.bookf'); if (!r || !f) return; const el = k => f.elements.namedItem(k); el('title').value = r.title; el('author').value = r.author; el('publisher').value = r.publisher; el('pages').value = r.pages; el('cover').value = r.cover; Object.assign(bdraft, { title: r.title, cover: r.cover, isbn: r.isbn }); $('#bres').innerHTML = `<small class="ok">'${esc(r.title)}' 정보를 채웠어요.</small>`; refreshCover(); setDraftColor(r.cover); if ((D.set.aladinKey || '').trim()) spineFind(); },
   bookColor: () => setDraftColor(bdraft && bdraft.cover),
   bookSw: d => { const f = $('#m form.bookf'); f.elements.namedItem('color').value = d.c; bdraft.color = d.c; bdraft.colorAuto = false; $('#bsw').style.setProperty('--c', d.c); $('#bcolnote').textContent = ''; refreshCover(); },
   qAdd: d => { const b = by(D.books, d.id), tx = $('#qtx').value.trim(), pg = $('#qpg').value.trim().replace(/^p\.?\s*/i, ''); if (!tx) { $('#qtx').focus(); return; } b.quotes.push({ id: uid(), page: pg, text: tx, at: Date.now() }); persist(); openBook(b.id); const q = $('#qpg'); if (q) q.focus(); },
@@ -2554,10 +2686,12 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const t = e.target, s = t.dataset.s;
   if (t.dataset.sb) { D.set[t.dataset.sb] = t.checked; save(); return; }
-  if (t.dataset.sync) { SY.on = t.checked; saveSY(); if (SY.on) { preloadGSI(); driveSync(true); } else syncUI('off'); }
+  if (t.dataset.sync === 'autoRe') { SY.autoRe = t.checked; saveSY(); }
+  else if (t.dataset.sync) { SY.on = t.checked; saveSY(); if (SY.on) { preloadGSI(); driveSync(true); } else syncUI('off'); }
   else if (t.dataset.imp) { importJSON(t.files[0]); t.value = ''; }
   else if (t.dataset.mimp) { mediaImport(t.files[0]); t.value = ''; }
   else if (t.dataset.bfile) { bookFile(t.dataset.bfile, t.files[0]); t.value = ''; }
+  else if (t.dataset.spurl) { spinePrev(); if (t.value.trim()) { const r = t.form.querySelector('input[name=spine][value=real]'); if (r) r.checked = true; } }
   else if (t.form && t.form.classList.contains('bookf') && t.name === 'cover') { const u = safeUrl(t.value); bdraft.cover = u; refreshCover(); if (u) setDraftColor(u); }
   else if (t.form && t.form.classList.contains('bookf') && t.name === 'color') { bdraft.color = t.value; bdraft.colorAuto = false; $('#bsw').style.setProperty('--c', t.value); $('#bcolnote').textContent = ''; refreshCover(); }
   else if (t.form && t.form.classList.contains('bookf') && t.name === 'title') { bdraft.title = t.value; if (!bdraft.cover) refreshCover(); }
