@@ -8,7 +8,7 @@
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-s5cHaapea8lAzsBZbNDOgMJk4GRPXGxUEwYxGZW7VEc=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-2t1v0bEjqAp47hQsp9iRFMiLwa+J+XUVQxh5fqVRG4E=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -814,7 +814,7 @@ function normalize(d) {
   for (const k of ['habitLog', 'notes', 'weekNotes', 'legacy', 'ruleLog', 'days', 'photoNotes', 'bookRetro']) if (!d[k] || typeof d[k] !== 'object') d[k] = {};
   if (!Array.isArray(d.wish)) d.wish = [];
   d.wish = Array.from({ length: 100 }, (_, i) => ({ t: String(d.wish[i]?.t ?? ''), s: [0, 1, 2].includes(d.wish[i]?.s) ? d.wish[i].s : 0 }));
-  for (const b of d.books) { if (b.spine === 'real') b.spine = 'auto'; if (/image\.aladin\.co\.kr/.test(b.spineUrl || '')) { b.spineUrl = ''; b.spineAR = 0; b.spineTry = 0; b.spineTryN = 0; } if (!b.spineV7) { if (!b.spine || b.spine === 'color' || b.spine === 'cover') b.spine = 'auto'; b.spineV7 = true; } b.genre ??= ''; b.fav = !!b.fav; b.title = String(b.title ?? ''); b.quotes ??= []; b.memo ??= ''; b.spine ||= 'color'; b.status ||= '읽는 중'; b.start ??= ''; b.end ??= ''; b.cover ??= ''; b.author ??= ''; b.publisher ??= ''; }
+  for (const b of d.books) { if (b.end && /^\d{4}-\d{2}-\d{2}$/.test(b.end) && b.status !== '다 읽음') b.status = '다 읽음'; if (b.spine === 'real') b.spine = 'auto'; if (/image\.aladin\.co\.kr/.test(b.spineUrl || '')) { b.spineUrl = ''; b.spineAR = 0; b.spineTry = 0; b.spineTryN = 0; } if (!b.spineV7) { if (!b.spine || b.spine === 'color' || b.spine === 'cover') b.spine = 'auto'; b.spineV7 = true; } b.genre ??= ''; b.fav = !!b.fav; b.title = String(b.title ?? ''); b.quotes ??= []; b.memo ??= ''; b.spine ||= 'color'; b.status ||= '읽는 중'; b.start ??= ''; b.end ??= ''; b.cover ??= ''; b.author ??= ''; b.publisher ??= ''; }
   for (const p of d.photos) { p.memo ??= ''; p.createdAt ??= 0; }
   d.mission ??= ''; d.values ??= ''; d.bigGoal = { text: '', due: '', projectId: '', ...(d.bigGoal || {}) };
   d.set = { ...(d.set || {}) };
@@ -1665,6 +1665,7 @@ function openBookEdit(id, pre = {}) {
     b.cover = String(bdraft.cover).startsWith('idb:') && !url ? bdraft.cover : safeUrl(url) || (String(bdraft.cover).startsWith('idb:') ? bdraft.cover : '');
     if (bdraft.spineImg) b.spineImg = bdraft.spineImg;
     for (const [o, n] of [[oldCover, b.cover], [oldSpine, b.spineImg]]) if (o && o !== n && String(o).startsWith('idb:')) forget(o.slice(4));
+    if (b.end) b.status = '다 읽음';
     if (b.status === '다 읽음' && !b.end) b.end = today();
     if (nw) D.books.push(b);
     bdraft = null; save();
@@ -2715,11 +2716,12 @@ document.addEventListener('change', e => {
   else if (t.dataset.imp) { importJSON(t.files[0]); t.value = ''; }
   else if (t.dataset.mimp) { mediaImport(t.files[0]); t.value = ''; }
   else if (t.dataset.bfile) { bookFile(t.dataset.bfile, t.files[0]); t.value = ''; }
+  else if (t.form && t.form.classList.contains('bookf') && (t.name === 'end' || t.name === 'status')) { const f = t.form, st = f.elements.namedItem('status'), en = f.elements.namedItem('end'); if (t.name === 'end' && en.value) st.value = '다 읽음'; if (t.name === 'status') { if (st.value === '다 읽음' && !en.value) en.value = today(); else if (st.value !== '다 읽음') en.value = ''; } }
   else if (t.dataset.spurl) { spinePrev(); if (t.value.trim()) { const r = t.form.querySelector('input[name=spine][value=auto]'); if (r && t.form.querySelector('input[name=spine][value=color]:checked')) r.checked = true; } }
   else if (t.form && t.form.classList.contains('bookf') && t.name === 'cover') { const u = safeUrl(t.value); bdraft.cover = u; refreshCover(); if (u) setDraftColor(u); }
   else if (t.form && t.form.classList.contains('bookf') && t.name === 'color') { bdraft.color = t.value; bdraft.colorAuto = false; $('#bsw').style.setProperty('--c', t.value); $('#bcolnote').textContent = ''; refreshCover(); }
   else if (t.form && t.form.classList.contains('bookf') && t.name === 'title') { bdraft.title = t.value; if (!bdraft.cover) refreshCover(); }
-  else if (t.dataset.bk) { const b = by(D.books, t.dataset.bk), f = t.dataset.f; if (b) { b[f] = t.value; if (f === 'color') b.colorAuto = false; if (f === 'status' && t.value === '다 읽음' && !b.end) b.end = today(); persist(); openBook(b.id); } }
+  else if (t.dataset.bk) { const b = by(D.books, t.dataset.bk), f = t.dataset.f; if (b) { b[f] = t.value; if (f === 'color') b.colorAuto = false; if (f === 'status' && t.value === '다 읽음' && !b.end) b.end = today(); if (f === 'status' && t.value !== '다 읽음') b.end = ''; if (f === 'end' && t.value) b.status = '다 읽음'; persist(); openBook(b.id); } }
   else if (t.dataset.cat && t.dataset.f === 'gcal') { const c = catOf(t.dataset.cat); c.noCal = !t.checked; const now = Date.now(); D.items.forEach(i => { if (i.cat === c.id) i.updatedAt = now; }); D.rules.forEach(r => { if (r.cat === c.id) r.updatedAt = now; }); save(); toast(c.noCal ? `'${c.name}'은(는) 구글 캘린더로 보내지 않아요` : `'${c.name}'도 구글 캘린더로 보내요`); if (calLive()) syncAll().then(() => { persist(); render(); }).catch(syncErr); }
   else if (t.dataset.cat) { const c = catOf(t.dataset.cat), f = t.dataset.f; if (f === 'col') { c.col = PAL[t.value] ? t.value : 'gray'; c.g = PAL[c.col][3]; D.items.forEach(i => { if (i.cat === c.id) i.updatedAt = Date.now(); }); D.rules.forEach(r => { if (r.cat === c.id) r.updatedAt = Date.now(); }); } else if (f === 'icon') c.icon = t.value.trim() || '📌'; else c.name = t.value.trim() || c.name; save(); }
   else if (t.dataset.hab) { const h = by(D.habits, t.dataset.hab); if (t.dataset.f === 'perWeek') h.perWeek = Math.min(7, Math.max(1, num(t.value) || 1)); else h.name = t.value.trim() || h.name; save(); }
