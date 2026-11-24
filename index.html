@@ -8,7 +8,7 @@
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src https://www.aladin.co.kr 'sha256-Fmvi1WQLTKLhCS7wA+/9vKBUGaE3p3j5ZmBqWfl0eVc=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-s5cHaapea8lAzsBZbNDOgMJk4GRPXGxUEwYxGZW7VEc=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -814,7 +814,7 @@ function normalize(d) {
   for (const k of ['habitLog', 'notes', 'weekNotes', 'legacy', 'ruleLog', 'days', 'photoNotes', 'bookRetro']) if (!d[k] || typeof d[k] !== 'object') d[k] = {};
   if (!Array.isArray(d.wish)) d.wish = [];
   d.wish = Array.from({ length: 100 }, (_, i) => ({ t: String(d.wish[i]?.t ?? ''), s: [0, 1, 2].includes(d.wish[i]?.s) ? d.wish[i].s : 0 }));
-  for (const b of d.books) { if (b.spine === 'real') b.spine = 'auto'; if (!b.spineV7) { if (!b.spine || b.spine === 'color' || b.spine === 'cover') b.spine = 'auto'; b.spineV7 = true; } b.genre ??= ''; b.fav = !!b.fav; b.title = String(b.title ?? ''); b.quotes ??= []; b.memo ??= ''; b.spine ||= 'color'; b.status ||= '읽는 중'; b.start ??= ''; b.end ??= ''; b.cover ??= ''; b.author ??= ''; b.publisher ??= ''; }
+  for (const b of d.books) { if (b.spine === 'real') b.spine = 'auto'; if (/image\.aladin\.co\.kr/.test(b.spineUrl || '')) { b.spineUrl = ''; b.spineAR = 0; b.spineTry = 0; b.spineTryN = 0; } if (!b.spineV7) { if (!b.spine || b.spine === 'color' || b.spine === 'cover') b.spine = 'auto'; b.spineV7 = true; } b.genre ??= ''; b.fav = !!b.fav; b.title = String(b.title ?? ''); b.quotes ??= []; b.memo ??= ''; b.spine ||= 'color'; b.status ||= '읽는 중'; b.start ??= ''; b.end ??= ''; b.cover ??= ''; b.author ??= ''; b.publisher ??= ''; }
   for (const p of d.photos) { p.memo ??= ''; p.createdAt ??= 0; }
   d.mission ??= ''; d.values ??= ''; d.bigGoal = { text: '', due: '', projectId: '', ...(d.bigGoal || {}) };
   d.set = { ...(d.set || {}) };
@@ -1444,51 +1444,59 @@ async function colorFrom(src) {
   catch (e) { return null; }
 }
 // 책등: 표지 왼쪽 그림을 책등 배경으로 쓰고(실제 책등처럼 표지 디자인이 이어져요), 제목은 표지 색 띠 위에 세로로 써요.
-// 진짜 책등 이미지: 알라딘 상품 이미지 폴더의 책등 그림을 찾아 써요 (없으면 지금 디자인으로)
+// 진짜 책등 이미지: 예스24 Open API의 책등(sideCover)을 구글 Apps Script 중계로 받아 와요 (없으면 지금 디자인으로)
 const SPBAD = new Set();
-function jsonp(url, ms = 9000) {
-  return new Promise((res, rej) => {
-    const cb = '__al' + Math.random().toString(36).slice(2), sc = document.createElement('script');
-    const done = (v, err) => { clearTimeout(t); try { delete window[cb]; } catch (_) { window[cb] = undefined; } sc.remove(); err ? rej(err) : res(v); };
-    const t = setTimeout(() => done(null, new Error('알라딘 응답이 없어요')), ms);
-    window[cb] = (a, b) => done(a && typeof a === 'object' ? a : b);
-    sc.onerror = () => done(null, new Error('알라딘에 연결하지 못했어요'));
-    sc.src = url + '&callback=' + cb; document.head.appendChild(sc);
-  });
+const RELAY_CODE = "/**\n * 플래너 책등 중계 (구글 Apps Script)\n * 예스24 Open API는 브라우저에서 바로 부를 수 없어서, 이 코드가 대신 불러 책 정보(표지·책등·쪽수·두께)를 돌려줘요.\n *\n * 쓰는 법\n * 1. 아래 YES24_KEY 따옴표 안에 예스24 Open API 키(yk_live_로 시작)를 붙여 넣고 저장해요.\n * 2. 배포 → 새 배포 → 유형: 웹 앱 → 실행: 나 / 액세스 권한: 모든 사용자 → 배포.\n * 3. 나온 웹 앱 주소(…/exec)를 플래너 설정 → 책 검색 → '예스24 중계 주소'에 붙여 넣어요.\n * 키는 이 코드 안에만 있고 플래너나 GitHub에는 올라가지 않아요.\n */\nconst YES24_KEY = '여기에_예스24_키를_붙여_넣으세요';\n\nfunction doGet(e) {\n  const p = (e && e.parameter) || {};\n  const out = x => ContentService.createTextOutput(JSON.stringify(x)).setMimeType(ContentService.MimeType.JSON);\n  if (!YES24_KEY || YES24_KEY.indexOf('여기에') === 0) return out({ ok: false, error: 'NO_KEY' });\n  if (p.ping) return out({ ok: true, pong: 1 });\n  const base = 'https://apis.yes24.com/v1/goods/';\n  const isbn = String(p.isbn || '').replace(/[^0-9Xx]/g, '');\n  let url;\n  if (isbn.length === 13) url = base + 'itemDetail?searchType=ISBN13&detail=Y&query=' + isbn;\n  else if (p.id) url = base + 'itemDetail?searchType=ItemId&detail=Y&query=' + encodeURIComponent(p.id);\n  else if (p.q) url = base + 'itemList?category=BOOK&detail=Y&pageSize=' + Math.min(Number(p.n) || 5, 20) + '&query=' + encodeURIComponent(p.q);\n  else return out({ ok: false, error: 'NO_QUERY' });\n  const r = UrlFetchApp.fetch(url, { headers: { 'X-Api-Key': YES24_KEY }, muteHttpExceptions: true });\n  let j = {};\n  try { j = JSON.parse(r.getContentText()); } catch (err) { j = {}; }\n  const items = ((j.data && j.data.items) || []).map(function (it) {\n    return { id: it.itemId, title: it.title, author: it.author, publisher: it.publisher, isbn13: it.isbn13, cover: it.cover, spine: it.sideCover, link: it.link, pages: it.pages || null, thick: it.height || null, len: it.length || null, wid: it.width || null, date: it.publishDate || '' };\n  });\n  return out({ ok: r.getResponseCode() === 200 && j.success !== false, code: r.getResponseCode(), error: j.errorCode || null, message: j.message || '', items: items });\n}\n";
+const https_ = u => String(u || '').replace(/^http:/, 'https:');
+async function y24(params) {
+  const base = (D.set.y24relay || '').trim();
+  if (!base) throw new Error('설정 → 책 검색에 예스24 중계 주소를 넣어 주세요');
+  if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(base)) throw new Error('중계 주소는 https://script.google.com/… 으로 시작해야 해요');
+  let r; try { r = await fetch(base + (base.includes('?') ? '&' : '?') + new URLSearchParams(params), { redirect: 'follow' }); } catch (_) { throw new Error('중계에 연결하지 못했어요'); }
+  const j = await r.json().catch(() => null);
+  if (!j) throw new Error("중계 응답을 읽지 못했어요. 배포할 때 액세스 권한을 '모든 사용자'로 했는지 확인해 주세요");
+  if (j.error === 'NO_KEY') throw new Error('중계 코드 맨 위에 예스24 키를 넣어 주세요');
+  if (j.code === 401 || /AUTH/.test(j.error || '')) throw new Error('예스24 키가 맞지 않아요 (중계 코드의 키를 확인해 주세요)');
+  if (j.code === 429) throw new Error('예스24 하루 호출 한도를 넘었어요. 내일 다시 찾아요');
+  return j;
 }
-async function aladinItem(b) {
-  const k = (D.set.aladinKey || '').trim(); if (!k) throw new Error('설정 → 책 검색에 알라딘 TTB 키를 넣어 주세요');
-  const isbn = String(b.isbn || '').replace(/[^0-9Xx]/g, ''), base = 'https://www.aladin.co.kr/ttb/api/', q = `ttbkey=${encodeURIComponent(k)}&output=js&Version=20131101&Cover=Big`;
-  const j = isbn.length === 13 || isbn.length === 10
-    ? await jsonp(`${base}ItemLookUp.aspx?${q}&itemIdType=${isbn.length === 13 ? 'ISBN13' : 'ISBN'}&ItemId=${isbn}`)
-    : await jsonp(`${base}ItemSearch.aspx?${q}&Query=${encodeURIComponent([b.title, b.author].filter(Boolean).join(' '))}&QueryType=Keyword&MaxResults=1&SearchTarget=Book`);
-  if (j && j.errorCode) throw new Error('알라딘: ' + (j.errorMessage || '오류 ' + j.errorCode));
-  const it = ((j && j.item) || [])[0]; if (!it) throw new Error('알라딘에서 이 책을 찾지 못했어요');
-  return it;
-}
-const spineCands = cover => { const m = String(cover || '').match(/^https?:\/\/image\.aladin\.co\.kr\/product\/(\d+)\/(\d+)\/[^/]+\/([^/]+?)_\d+\.(?:jpe?g|png|gif)/i); if (!m) return []; const p = `https://image.aladin.co.kr/product/${m[1]}/${m[2]}/`, c = m[3]; return [`${p}spineflip/${c}_d.jpg`, `${p}spineflip/${c}_d.png`, `${p}letslook/${c}_s.jpg`, `${p}spine/${c}_d.jpg`]; };
+const normT = t => String(t || '').replace(/\s+/g, '').replace(/[:：(（\[].*$/, '').toLowerCase();
 const probeImg = u => new Promise(res => { const i = new Image(); i.referrerPolicy = 'no-referrer'; const t = setTimeout(() => res(null), 8000); i.onload = () => { clearTimeout(t); res(i.naturalWidth && i.naturalHeight ? { u, ar: i.naturalWidth / i.naturalHeight } : null); }; i.onerror = () => { clearTimeout(t); res(null); }; i.src = u; });
 async function findSpine(b) {
-  const it = await aladinItem(b);
-  for (const u of spineCands(it.cover)) { const r = await probeImg(u); if (r && r.ar < .45) return { url: r.u, ar: r.ar, it }; }
-  return { url: '', ar: 0, it };
+  const isbn = String(b.isbn || '').replace(/[^0-9Xx]/g, '');
+  let it = null;
+  if (isbn.length === 13) it = ((await y24({ isbn })).items || [])[0];
+  if (!it && b.y24id) it = ((await y24({ id: b.y24id })).items || [])[0];
+  if (!it && b.title) { const items = (await y24({ q: [b.title, b.author].filter(Boolean).join(' '), n: 5 })).items || []; const nt = normT(b.title); it = items.find(x => normT(x.title) === nt) || items.find(x => { const xt = normT(x.title); return xt && nt && (xt.startsWith(nt) || nt.startsWith(xt)); }); }
+  if (!it) throw Object.assign(new Error('예스24에서 이 책을 찾지 못했어요'), { none: 1 });
+  const r = it.spine ? await probeImg(https_(it.spine)) : null;   // 책등이 없는 책은 회색 대체 그림(가로로 넓은 그림)이 와요
+  return { url: r && r.ar < .45 ? r.u : '', ar: r ? r.ar : 0, it };
 }
-const aladinCover = it => String(it.cover || '').replace(/^http:/, 'https:').replace(/\/cover(sum|150|200)?\//, '/cover500/');
+function applyY24(b, it) {
+  if (!b.isbn && it.isbn13) b.isbn = it.isbn13;
+  if (!b.cover && it.cover) b.cover = https_(it.cover);
+  if (!b.pages && it.pages) b.pages = it.pages;
+  if (!b.publisher && it.publisher) b.publisher = it.publisher;
+  if (it.link) b.y24 = https_(it.link); if (it.id) b.y24id = it.id;
+}
+// 예스24 상품 주소를 붙여 넣으면 책등 그림 주소로 바꿔요
+const y24SpineFromLink = v => { const m = String(v || '').match(/yes24\.com\/(?:product\/goods|Product\/Goods|goods)\/(\d+)/i); return m ? `https://image.yes24.com/goods/${m[1]}/SIDE/L` : ''; };
 document.addEventListener('load', e => {
   const im = e.target; if (!im.classList || !im.classList.contains('spreal')) return;
   const b = by(D.books, im.dataset.spid); if (!b || !im.naturalHeight) return;
   const ar = im.naturalWidth / im.naturalHeight;
   if (ar >= .45) { SPBAD.add(b.spineUrl); render(); return; }   // 책등이 아닌 그림이면 원래 디자인으로
-  if (!b.spineAR || Math.abs(b.spineAR - ar) / ar > .03) { b.spineAR = +ar.toFixed(4); const bt = im.closest('.spine'), H = parseFloat(bt.style.getPropertyValue('--h')); bt.style.setProperty('--w', Math.round(Math.max(9, Math.min(48, H * ar))) + 'px'); save(); }
+  if (!b.spineAR || Math.abs(b.spineAR - ar) / ar > .03) { b.spineAR = +ar.toFixed(4); const bt = im.closest('.spine'), H = parseFloat(bt.style.getPropertyValue('--h')); bt.style.setProperty('--w', Math.round(Math.max(9, Math.min(48, H * ar))) + 'px'); persist(); }
 }, true);
 document.addEventListener('error', e => { const im = e.target; if (im.classList && im.classList.contains('spreal')) { const b = by(D.books, im.dataset.spid); if (b) { SPBAD.add(b.spineUrl); render(); } } }, true);
-// 책등 이미지를 알아서 찾아요: 앱을 열 때, 책을 저장할 때, 키를 넣었을 때. 못 찾은 책은 1주일 뒤 다시 (최대 4번).
+// 책등 이미지를 알아서 찾아요: 앱을 열 때, 책을 저장할 때, 중계 주소를 넣었을 때. 못 찾은 책은 1주일 뒤 다시 (최대 4번).
 let spRun = false, spProg = '', spErr = '';
-const spineState = b => b.spineUrl && !SPBAD.has(b.spineUrl) ? '알라딘 책등 이미지를 쓰고 있어요' : !(D.set.aladinKey || '').trim() ? '알라딘 TTB 키를 한 번 넣어 두면 저장할 때 알아서 찾아요 (설정 → 책 검색)' : b.spineTry ? '알라딘에 아직 이 책의 책등 이미지가 없어요. 1주일 뒤 다시 찾아볼게요' : '저장하면 알라딘에서 알아서 찾아요';
-const spNote = () => !(D.set.aladinKey || '').trim() ? `<small class="mu">알라딘 TTB 키를 한 번만 넣어 두면, 책등 이미지를 플래너가 알아서 찾아 꽂아요.</small><button class="mini" data-a="tab" data-t="set">키 넣으러 가기</button>` : spErr ? `<small class="bad">책등 찾기 멈춤 · ${esc(spErr)}</small>` : spRun ? `<small class="mu">알라딘에서 책등 이미지 찾는 중 ${esc(spProg)}</small>` : '';
+const hasRelay = () => !!(D.set.y24relay || '').trim();
+const spineState = b => b.spineUrl && !SPBAD.has(b.spineUrl) ? '책등 이미지를 쓰고 있어요' : !hasRelay() ? '예스24 중계를 한 번 연결해 두면 저장할 때 알아서 찾아요 (설정 → 책 검색)' : b.spineTry ? '예스24에 아직 이 책의 책등 이미지가 없어요. 1주일 뒤 다시 찾아볼게요' : '저장하면 예스24에서 알아서 찾아요';
+const spNote = () => !hasRelay() ? `<small class="mu">예스24 중계를 한 번만 연결해 두면, 책등 이미지를 플래너가 알아서 찾아 꽂아요.</small><button class="mini" data-a="tab" data-t="set">연결하러 가기</button>` : spErr ? `<small class="bad">책등 찾기 멈춤 · ${esc(spErr)}</small>` : spRun ? `<small class="mu">예스24에서 책등 이미지 찾는 중 ${esc(spProg)}</small>` : '';
 const spNoteUp = () => { const n = $('#spnote'); if (n) n.innerHTML = spNote(); };
 async function autoSpines() {
-  if (spRun || !(D.set.aladinKey || '').trim() || !navigator.onLine) return;
+  if (spRun || !hasRelay() || !navigator.onLine) return;
   const now = Date.now(), WEEK = 7 * 864e5;
   const todo = D.books.filter(b => (b.spine === 'auto' || b.spine === 'cover' || b.spine === 'real') && (b.title || b.isbn) && (!b.spineUrl || SPBAD.has(b.spineUrl)) && (!b.spineTry || (now - b.spineTry > WEEK && (b.spineTryN || 0) < 4)));
   if (!todo.length) return;
@@ -1498,14 +1506,13 @@ async function autoSpines() {
       spProg = `${i + 1}/${todo.length}`; spNoteUp();
       try {
         const r = await findSpine(b);
-        if (!b.isbn && r.it.isbn13) b.isbn = r.it.isbn13;
-        if (!b.cover && r.it.cover) b.cover = aladinCover(r.it);
+        applyY24(b, r.it);
         if (r.url) { SPBAD.delete(r.url); b.spineUrl = r.url; b.spineAR = +r.ar.toFixed(4); found++; }
         b.spineTry = Date.now(); b.spineTryN = (b.spineTryN || 0) + 1;
       } catch (e) {
-        if (/TTB|ttbkey|Key|키/i.test(e.message)) { spErr = e.message; break; }   // 키 문제는 멈추고 알려요
-        if (/연결하지 못했어요|응답이 없어요/.test(e.message)) break;          // 알라딘 접속 문제는 다음에 다시
-        b.spineTry = Date.now(); b.spineTryN = (b.spineTryN || 0) + 1;          // 알라딘에 없는 책
+        if (e.none) { b.spineTry = Date.now(); b.spineTryN = (b.spineTryN || 0) + 1; }   // 예스24에 없는 책
+        else if (/연결하지 못했어요/.test(e.message)) break;                              // 잠깐 끊긴 거면 다음에 다시
+        else { spErr = e.message; break; }                                               // 키·주소 문제는 멈추고 알려요
       }
       persist();
       await new Promise(res => setTimeout(res, 250));
@@ -1517,32 +1524,13 @@ async function autoSpines() {
   }
 }
 setTimeout(() => autoSpines(), 3500);
-async function spineFind() {
-  const f = $('#m form.bookf'), out = $('#bspnote'); if (!f || !bdraft) return;
-  const el = k => f.elements.namedItem(k);
-  Object.assign(bdraft, { title: el('title').value.trim(), author: el('author').value.trim() });
-  out.textContent = '알라딘에서 찾는 중…';
-  try {
-    const r = await findSpine(bdraft);
-    if (!bdraft.isbn && r.it.isbn13) bdraft.isbn = r.it.isbn13;
-    if (!el('cover').value && !String(bdraft.cover).startsWith('idb:') && r.it.cover) { el('cover').value = aladinCover(r.it); bdraft.cover = el('cover').value; refreshCover(); }
-    if (!r.url) { out.textContent = '알라딘에 이 책의 책등 이미지가 없어요. 알라딘·예스24 상세 페이지의 책등 그림 주소를 붙여 넣거나, 책등 사진을 올려 주세요.'; return; }
-    el('spineUrl').value = r.url; bdraft.spineAR = r.ar; f.querySelector('input[name=spine][value=real]').checked = true;
-    out.textContent = '책등 이미지를 찾았어요'; spinePrev();
-  } catch (e) { out.textContent = e.message; }
+const spinePrev = () => { const f = $('#m form.bookf'), p = $('#bsprev'); if (!f || !p) return; const inp = f.elements.namedItem('spineUrl'); const conv = y24SpineFromLink(inp.value); if (conv) inp.value = conv; const u = safeUrl(inp.value.trim()); p.innerHTML = u ? `<img src="${esc(u)}" alt="책등 미리보기" referrerpolicy="no-referrer">` : ''; };
+async function relayTest() {
+  const o = $('#y24out'); if (o) o.textContent = '확인하는 중…';
+  try { const j = await y24({ q: '어린 왕자', n: 1 }); const it = (j.items || [])[0]; if (!j.ok && !it) throw new Error(j.message || j.error || '예스24 응답이 이상해요'); if (o) { o.textContent = it ? `연결됐어요 · 예스24에서 '${it.title}'을(를) 찾았어요` : '연결됐어요'; o.className = 'ok'; } }
+  catch (e) { if (o) { o.textContent = e.message; o.className = 'bad'; } }
 }
-const spinePrev = () => { const f = $('#m form.bookf'), p = $('#bsprev'); if (!f || !p) return; const u = safeUrl(f.elements.namedItem('spineUrl').value.trim()); p.innerHTML = u ? `<img src="${esc(u)}" alt="책등 미리보기" referrerpolicy="no-referrer">` : ''; };
-async function spineAll() {
-  if (!(D.set.aladinKey || '').trim()) { toast('설정 → 책 검색에 알라딘 TTB 키를 먼저 넣어 주세요', 'bad'); return; }
-  const list = D.books.filter(b => b.spine !== 'photo' && !(b.spine === 'real' && b.spineUrl && !SPBAD.has(b.spineUrl))); let ok = 0, none = 0, bad = 0;
-  if (!list.length) { toast('바꿀 책이 없어요'); return; }
-  for (const [i, b] of list.entries()) {
-    toast(`책등 찾는 중 ${i + 1}/${list.length} · ${b.title}`);
-    try { const r = await findSpine(b); if (!b.isbn && r.it.isbn13) b.isbn = r.it.isbn13; if (!b.cover && r.it.cover) b.cover = aladinCover(r.it); if (r.url) { Object.assign(b, { spine: 'real', spineUrl: r.url, spineAR: +r.ar.toFixed(4) }); ok++; } else none++; }
-    catch (e) { bad++; if (/TTB|키|ttbkey|Key/i.test(e.message)) { toast(e.message, 'bad'); break; } }
-  }
-  save(); toast(`책등 이미지 ${ok}권 찾았어요${none ? ` · ${none}권은 알라딘에 책등이 없어요` : ''}${bad ? ` · ${bad}권은 찾지 못했어요` : ''}`);
-}
+async function copyRelay() { try { await navigator.clipboard.writeText(RELAY_CODE); toast('중계 코드를 복사했어요. Apps Script에 붙여 넣으세요'); } catch (_) { const t = $('#relaycode'); if (t) { t.hidden = false; t.select(); } toast('아래 칸의 코드를 전체 선택해서 복사해 주세요'); } }
 function spineHTML(b) {
   const mob = isMobile(), pages = +b.pages || 260, h0 = hashN(b.id);
   const w = Math.round(Math.max(12, Math.min(28, pages / 18 + 6)) * (mob ? .85 : 1)), h = (mob ? 92 : 114) + (h0 % 6) * (mob ? 4 : 5);
@@ -1666,14 +1654,14 @@ function openBookEdit(id, pre = {}) {
 <label>표지</label><div class="row" id="bcovrow">${bookCoverPrev()}<div class="grow" style="display:flex;flex-direction:column;gap:6px"><label class="filebtn" style="align-self:flex-start">표지 사진 올리기<input type="file" accept="image/*" data-bfile="cover"></label><input name="cover" value="${esc(String(b.cover).startsWith('idb:') ? '' : b.cover)}" placeholder="또는 표지 이미지 주소 (https://)" aria-label="표지 이미지 주소"></div></div>
 <label>책등 색 <small id="bcolnote">${b.colorAuto ? '표지에서 뽑은 색이에요' : ''}</small></label><div class="cpick"><span class="cswatch" id="bsw" style="--c:${bookColor(b)}"></span><input type="color" name="color" value="${bookColor(b)}" aria-label="책등 색"><button type="button" class="mini" data-a="bookColor">표지에서 색 다시 뽑기</button>${SPINE_FALL.slice(0, 8).map(c => `<button type="button" class="cswatch" style="--c:${c};width:22px;height:22px;padding:0;border:0" data-a="bookSw" data-c="${c}" aria-label="색 ${c}"></button>`).join('')}</div>
 <label>책등 모양</label><div class="row">${[['auto', '자동 (책등 이미지 → 없으면 표지 그림)'], ['color', '색 + 제목'], ['photo', '내 책등 사진']].map(([v, l]) => `<label class="ck"><input type="radio" name="spine" value="${v}"${(b.spine === v || (v === 'auto' && b.spine === 'cover')) ? ' checked' : ''}>${l}</label>`).join('')}<label class="filebtn">책등 사진 올리기<input type="file" accept="image/*" data-bfile="spine"></label></div>
-<div class="row" style="align-items:flex-start;gap:10px"><div class="bsprev" id="bsprev">${b.spineUrl ? `<img src="${esc(b.spineUrl)}" alt="책등 미리보기" referrerpolicy="no-referrer">` : ''}</div><div class="grow" style="display:flex;flex-direction:column;gap:6px"><small class="mu" id="bspnote">${spineState(b)}</small><input name="spineUrl" data-spurl="1" value="${esc(b.spineUrl || '')}" placeholder="책등 이미지 주소 — 저장하면 알라딘에서 알아서 찾아 채워요" aria-label="책등 이미지 주소"></div></div>
+<div class="row" style="align-items:flex-start;gap:10px"><div class="bsprev" id="bsprev">${b.spineUrl ? `<img src="${esc(b.spineUrl)}" alt="책등 미리보기" referrerpolicy="no-referrer">` : ''}</div><div class="grow" style="display:flex;flex-direction:column;gap:6px"><small class="mu" id="bspnote">${spineState(b)}</small><input name="spineUrl" data-spurl="1" value="${esc(b.spineUrl || '')}" placeholder="책등 이미지 주소 또는 예스24 상품 주소 — 비워 두면 알아서 찾아요" aria-label="책등 이미지 주소">${b.y24 ? `<a class="mu" style="font-size:12px" href="${esc(b.y24)}" target="_blank" rel="noopener">예스24 상품 페이지 ↗</a>` : ''}</div></div>
 <div class="row end">${nw ? '' : `<button type="button" class="dg" data-a="bookDel" data-id="${esc(b.id)}">${TRASH} 삭제</button>`}<span class="grow"></span><button value="no" formnovalidate>닫기</button><button value="ok" class="pri">저장</button></div></form>`;
   m.onclose = () => {
     if (m.returnValue !== 'ok') { bdraft = null; return; }
     const f = m.querySelector('form'), el = k => f.elements.namedItem(k);
     const url = el('cover').value.trim(), oldCover = b.cover, oldSpine = b.spineImg;
     Object.assign(b, { title: el('title').value.trim(), author: el('author').value.trim(), publisher: el('publisher').value.trim(), pages: num(el('pages').value) || '', genre: el('genre').value.trim(), fav: el('fav').checked, status: el('status').value, start: el('start').value, end: el('end').value, color: el('color').value, colorAuto: bdraft.colorAuto, spine: f.querySelector('input[name=spine]:checked')?.value || 'auto', isbn: bdraft.isbn || b.isbn || '' });
-    { const su = safeUrl(el('spineUrl').value.trim()); if (su !== (b.spineUrl || '')) { b.spineUrl = su; b.spineAR = 0; if (!su) { b.spineTry = 0; b.spineTryN = 0; } } if (su) SPBAD.delete(su); if (b.spine === 'real') b.spine = 'auto'; }
+    { const su = safeUrl(y24SpineFromLink(el('spineUrl').value) || el('spineUrl').value.trim()); if (su !== (b.spineUrl || '')) { b.spineUrl = su; b.spineAR = 0; if (!su) { b.spineTry = 0; b.spineTryN = 0; } } if (su) SPBAD.delete(su); if (b.spine === 'real') b.spine = 'auto'; }
     b.cover = String(bdraft.cover).startsWith('idb:') && !url ? bdraft.cover : safeUrl(url) || (String(bdraft.cover).startsWith('idb:') ? bdraft.cover : '');
     if (bdraft.spineImg) b.spineImg = bdraft.spineImg;
     for (const [o, n] of [[oldCover, b.cover], [oldSpine, b.spineImg]]) if (o && o !== n && String(o).startsWith('idb:')) forget(o.slice(4));
@@ -1827,12 +1815,12 @@ function vSet() {
 <div class="card"><h3>분류 · 색</h3><p class="mu">색은 파스텔 14가지 중에서 골라요. 구글 캘린더로 보낼 때는 가장 비슷한 구글 색으로 바뀌어요. 오른쪽 '구글'을 끄면 그 분류의 일정은 구글 캘린더로 보내지 않고, 이미 보낸 것도 지워요.</p>${D.cats.map(c => `<div class="set-row"><span class="sw" style="background:${catFill(c)};box-shadow:inset 0 0 0 2px ${catDot(c)}"></span><input data-cat="${esc(c.id)}" data-f="name" value="${esc(c.name)}" aria-label="분류 이름" style="width:11em"><select data-cat="${esc(c.id)}" data-f="col" aria-label="색">${colorOpts(c.col)}</select><label class="ck" title="구글 캘린더로 보내기"><input type="checkbox" data-cat="${esc(c.id)}" data-f="gcal"${c.noCal ? '' : ' checked'}>구글</label><button class="ic del" data-a="catDel" data-id="${esc(c.id)}" aria-label="분류 삭제: ${esc(c.name)}">${TRASH}</button></div>`).join('')}<button data-a="catAdd">＋ 분류</button></div>
 <div class="card"><h3>습관</h3><p class="mu">습관은 '습관' 탭의 월간 트래커에서 넣고 동그라미로 체크해요.</p><button class="pri" data-a="tab" data-t="habit">습관 탭으로 가기</button></div>
 <div class="card"><h3>백업</h3><p class="mu">기록은 이 브라우저에만 저장돼요. 다른 기기로 옮기거나 지켜 두려면 가끔 내보내 주세요. 마지막 백업: ${S.lastBackup ? new Date(S.lastBackup).toLocaleDateString('ko-KR') : '없음'}</p><div class="set-row"><button data-a="exp">JSON 내보내기</button><label class="filebtn">JSON 가져오기<input type="file" accept=".json,application/json" data-imp="1"></label><button data-a="xl">엑셀로 내보내기</button></div></div>
-<div class="card"><h3>책 검색</h3><p class="mu">책 찾기는 카카오 → 구글 북스 → 열린 도서관(Open Library) 순서로 시도해요. 구글 북스는 키 없이 쓰면 전 세계 사용자가 하루 한도를 함께 써서 자주 막히니, 아래 키 중 하나를 넣어 두면 안정적이에요. 한국 책은 카카오가 가장 잘 찾아요.</p>
+<div class="card"><h3>책 검색</h3><p class="mu">책 찾기는 카카오 → 구글 북스 → 열린 도서관(Open Library) 순서로 시도하고, 책등 이미지는 예스24에서 받아요. 구글 북스는 키 없이 쓰면 전 세계 사용자가 하루 한도를 함께 써서 자주 막히니, 아래 키 중 하나를 넣어 두면 안정적이에요. 한국 책은 카카오가 가장 잘 찾아요.</p>
 <label>카카오 REST API 키 (추천)<input data-s="kakaoKey" value="${esc(S.kakaoKey)}" placeholder="developers.kakao.com → 내 애플리케이션 → 앱 키 → REST API 키" autocomplete="off"></label>
-<label>알라딘 TTB 키 (진짜 책등 이미지)<input data-s="aladinKey" value="${esc(S.aladinKey || '')}" placeholder="알라딘 OpenAPI에서 받은 TTBKey (ttb로 시작)" autocomplete="off"></label>
+<label>예스24 중계 주소 (진짜 책등 이미지)<input data-s="y24relay" value="${esc(S.y24relay || '')}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></label><div class="set-row"><button data-a="copyRelay">중계 코드 복사</button><button data-a="relayTest">연결 확인</button><small id="y24out"></small></div><textarea id="relaycode" hidden readonly rows="6" style="font-size:11px;font-family:monospace">${esc(RELAY_CODE)}</textarea>
 <label>구글 북스 API 키 (선택)<input data-s="booksKey" value="${esc(S.booksKey)}" placeholder="console.cloud.google.com → Books API 사용 → 사용자 인증 정보 → API 키" autocomplete="off"></label>
 <details><summary>카카오 키 받는 법 (5분)</summary><ol class="howto"><li>developers.kakao.com 에 카카오 계정으로 로그인해요.</li><li>'내 애플리케이션 → 애플리케이션 추가하기'로 앱을 하나 만들어요 (이름은 아무거나, 예: 내 플래너).</li><li>만든 앱의 '앱 키'에서 <b>REST API 키</b>를 복사해 위 칸에 붙여 넣어요. (JavaScript 키·Admin 키가 아니에요)</li><li>독서기록 → 책 추가 → 찾기를 눌러 보세요.</li></ol></details>
-<details><summary>알라딘 TTB 키 받는 법 (책등 이미지용, 무료)</summary><ol class="howto"><li>알라딘에 로그인한 뒤, 알라딘 OpenAPI 안내 페이지(www.aladin.co.kr/ttb/apiguide.aspx)에서 TTB 키 발급을 눌러요.</li><li>사이트(블로그) 주소를 적는 칸에 이 플래너 주소를 넣고 신청해요.</li><li>받은 TTBKey(ttb로 시작)를 위 칸에 붙여 넣어요.</li><li>이제 끝이에요. 이미 꽂힌 책과 앞으로 넣는 책 모두 플래너가 알아서 책등 이미지를 찾아 꽂아요. 알라딘에 책등 이미지가 없는 책은 지금 디자인으로 그리고, 1주일 뒤 다시 찾아봐요.</li></ol></details>
+<details><summary>예스24 책등 연결하는 법 (한 번만, 10분 · 무료)</summary><ol class="howto"><li>developers.yes24.com 에 예스24 계정으로 로그인하고 API Key를 발급받아요 (yk_live_로 시작).</li><li>script.google.com 에서 '새 프로젝트'를 만들고, 있던 코드를 지운 뒤 위 '중계 코드 복사'로 복사한 코드를 붙여 넣어요.</li><li>코드 맨 위 따옴표 안의 글자를 지우고 예스24 키를 붙여 넣은 뒤 저장해요 (⌘S).</li><li>오른쪽 위 '배포 → 새 배포' → 톱니 → '웹 앱'을 고르고, 실행: '나', 액세스 권한: '모든 사용자'로 두고 배포해요. 권한 확인 창이 나오면 계정을 고르고 '고급 → (안전하지 않음)으로 이동 → 허용'을 눌러요 (내가 만든 코드라 괜찮아요).</li><li>나온 웹 앱 주소(…/exec)를 복사해 위 '예스24 중계 주소'에 붙여 넣고 '연결 확인'을 눌러요. 그다음부터는 꽂혀 있는 책과 새로 넣는 책 모두 플래너가 알아서 책등 이미지를 찾아요.</li></ol><p class="mu" style="font-size:12px">예스24 키는 내 구글 계정의 Apps Script 안에만 있고, 플래너나 GitHub에는 올라가지 않아요. 예스24에 책등 이미지가 없는 책은 지금 디자인으로 그리고 1주일 뒤 다시 찾아봐요.</p></details>
 <div class="set-row"><button data-a="bookTest">검색 시험해 보기</button><small id="bookTestOut"></small></div></div>
 <div class="card"><h3>사진 · 표지 백업</h3><p class="mu">사진 캘린더의 사진과 직접 올린 책 표지·책등 사진은 용량이 커서 위의 JSON 백업과 따로, 이 브라우저 안에 보관돼요. 다른 기기로 옮기거나 지켜 두려면 이 파일도 내보내 주세요.</p><div class="set-row"><button data-a="mediaExp">사진·표지 내보내기</button><label class="filebtn">사진·표지 가져오기<input type="file" accept=".json,application/json" data-mimp="1"></label></div></div>`;
 }
@@ -2611,6 +2599,8 @@ const A = {
   bookEdit: d => openBookEdit(d.id),
   bookDel: d => delBook(d.id),
   bookFind: () => runBookSearch(),
+  relayTest: () => relayTest(),
+  copyRelay: () => copyRelay(),
   bookPick: d => { const r = bres[+d.i], f = $('#m form.bookf'); if (!r || !f) return; const el = k => f.elements.namedItem(k); el('title').value = r.title; el('author').value = r.author; el('publisher').value = r.publisher; el('pages').value = r.pages; el('cover').value = r.cover; Object.assign(bdraft, { title: r.title, cover: r.cover, isbn: r.isbn }); $('#bres').innerHTML = `<small class="ok">'${esc(r.title)}' 정보를 채웠어요.</small>`; refreshCover(); setDraftColor(r.cover); },
   bookColor: () => setDraftColor(bdraft && bdraft.cover),
   bookSw: d => { const f = $('#m form.bookf'); f.elements.namedItem('color').value = d.c; bdraft.color = d.c; bdraft.colorAuto = false; $('#bsw').style.setProperty('--c', d.c); $('#bcolnote').textContent = ''; refreshCover(); },
@@ -2738,7 +2728,7 @@ document.addEventListener('change', e => {
   else if (t.dataset.day) { const x = D.days[t.dataset.day] || (D.days[t.dataset.day] = {}); if (t.value) x[t.dataset.f] = t.value; else delete x[t.dataset.f]; save(); }
   else if (t.dataset.ws) { const w = by(D.work, t.dataset.ws); if (w && (t.value || t.dataset.f === 'out')) { w[t.dataset.f] = t.value; save(); } }
   else if (t.dataset.fs) { const f = by(D.focus, t.dataset.fs); if (f && (t.value || t.dataset.f === 'end')) { f[t.dataset.f] = t.value; save(); } }
-  else if (s) { D.set[s] = s === 'planDay' ? +t.value : t.value; save(); if (s === 'aladinKey') { spErr = ''; for (const b of D.books) if (!b.spineUrl && (b.spineTryN || 0) < 4) b.spineTry = 0; autoSpines(); } }
+  else if (s) { D.set[s] = s === 'planDay' ? +t.value : t.value; save(); if (s === 'y24relay') { spErr = ''; for (const b of D.books) if (!b.spineUrl && (b.spineTryN || 0) < 4) b.spineTry = 0; autoSpines(); } }
 });
 document.addEventListener('submit', e => { if (e.target.id === 'refForm') { e.preventDefault(); addRef(); } });
 let dragId = null;
