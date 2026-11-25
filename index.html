@@ -8,7 +8,7 @@
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-7RQ/v2dJ5eyyqqEkEReVcn4hHXhHQmlZ0yBmdsgFI+4=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-BtEWIkLxwTSFYK++P7/CDYDEqc7Fev3vozQEQgYKoQA=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -158,6 +158,7 @@ label>.tp select,.lbl>.tp select{flex:1 1 0;display:block}
 .blk.pres{background:#eef5e4;border-left:0;margin:0;border-radius:0;cursor:default;z-index:0}
 .blk.foc{background:var(--p2);border-left:3px solid #86d093;cursor:default;z-index:2}
 .tg.ro .cell{cursor:default}
+@media (hover:none),(pointer:coarse){.tg:not(.ro) .cell{cursor:pointer;-webkit-tap-highlight-color:rgba(95,207,196,.18)}}
 /* 오늘 */
 .tday{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"g l" "g a";grid-template-rows:auto 1fr;gap:0 28px;margin-bottom:16px}
 .tday>.tgw{grid-area:g}
@@ -2326,7 +2327,7 @@ function shrinkImage(file) {
 }
 
 /* ================= 14. 10분 칸 끌어서 일정 만들기 ================= */
-let drag = null;
+let drag = null, lastPT = '';
 function slotsRange(a, b) { return [Math.min(a, b), Math.max(a, b) + 10]; }
 function markSel(grid, a, b) { grid.querySelectorAll('.cell').forEach(c => { const s = +c.dataset.slot; c.classList.toggle('selc', s >= a && s < b); }); }
 function finishPick(grid, a, b) {
@@ -2336,6 +2337,7 @@ function finishPick(grid, a, b) {
   openItem(0, { date: nd, time: fromMin(a), end: fromMin(b) });
 }
 document.addEventListener('pointerdown', e => {
+  lastPT = e.pointerType || '';
   const c = e.target.closest && e.target.closest('.tg:not(.ro) .cell'); if (!c) return;
   const grid = c.closest('.tg'), s = +c.dataset.slot;
   if (e.pointerType === 'mouse') { drag = { grid, a: s, b: s, moved: false }; markSel(grid, s, s + 10); e.preventDefault(); }
@@ -2350,8 +2352,10 @@ document.addEventListener('pointerup', () => {
   else tapPick(d.grid, d.a);
 });
 document.addEventListener('click', e => {
-  const c = e.target.closest && e.target.closest('.tg:not(.ro) .cell'); if (!c || e.pointerType === 'mouse') return;
-  if (e.pointerType === '' || e.pointerType === 'touch' || e.pointerType === 'pen') tapPick(c.closest('.tg'), +c.dataset.slot);
+  const c = e.target.closest && e.target.closest('.tg:not(.ro) .cell'); if (!c) return;
+  // 마우스는 pointerup에서 이미 처리했어요. 아이폰 Safari의 click에는 pointerType이 없어서 바로 앞 pointerdown으로 판단해요.
+  const pt = e.pointerType || lastPT; if (pt === 'mouse') return;
+  tapPick(c.closest('.tg'), +c.dataset.slot);
 });
 function tapPick(grid, s) {
   if (grid.closest('.dz')) { pick = null; return finishPick(grid, s, s + 60); }
