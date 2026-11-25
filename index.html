@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="build" content="v22">
 <!--
   보안 정책(CSP): 아래 'sha256-…' 값은 이 파일 아래쪽 스크립트 블록 내용과 정확히 일치해야 합니다.
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-AdTaL+m4wBbTxQH2mp4IQH2cqFA4h6b387GMC+vj4tY=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-wtmn88MAtgeSK/Yk9F3LznIAZ7iVFA54XbYiXucJRs8=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -2122,7 +2123,7 @@ function vSet() {
 <details><summary>카카오 키 받는 법 (5분)</summary><ol class="howto"><li>developers.kakao.com 에 카카오 계정으로 로그인해요.</li><li>'내 애플리케이션 → 애플리케이션 추가하기'로 앱을 하나 만들어요 (이름은 아무거나, 예: 내 플래너).</li><li>만든 앱의 '앱 키'에서 <b>REST API 키</b>를 복사해 위 칸에 붙여 넣어요. (JavaScript 키·Admin 키가 아니에요)</li><li>독서기록 → 책 추가 → 찾기를 눌러 보세요.</li></ol></details>
 <details><summary>예스24 책등 연결하는 법 (한 번만, 10분 · 무료)</summary><ol class="howto"><li>developers.yes24.com 에 예스24 계정으로 로그인하고 API Key를 발급받아요 (yk_live_로 시작).</li><li>script.google.com 에서 '새 프로젝트'를 만들고, 있던 코드를 지운 뒤 위 '중계 코드 복사'로 복사한 코드를 붙여 넣어요.</li><li>코드 맨 위 따옴표 안의 글자를 지우고 예스24 키를 붙여 넣은 뒤 저장해요 (⌘S).</li><li>오른쪽 위 '배포 → 새 배포' → 톱니 → '웹 앱'을 고르고, 실행: '나', 액세스 권한: '모든 사용자'로 두고 배포해요. 권한 확인 창이 나오면 계정을 고르고 '고급 → (안전하지 않음)으로 이동 → 허용'을 눌러요 (내가 만든 코드라 괜찮아요).</li><li>나온 웹 앱 주소(…/exec)를 복사해 위 '예스24 중계 주소'에 붙여 넣고 '연결 확인'을 눌러요. 그다음부터는 꽂혀 있는 책과 새로 넣는 책 모두 플래너가 알아서 책등 이미지를 찾아요.</li></ol><p class="mu" style="font-size:12px">예스24 키는 내 구글 계정의 Apps Script 안에만 있고, 플래너나 GitHub에는 올라가지 않아요. 예스24에 책등 이미지가 없는 책은 지금 디자인으로 그리고 1주일 뒤 다시 찾아봐요.</p></details>
 <div class="set-row"><button data-a="bookTest">검색 시험해 보기</button><small id="bookTestOut"></small></div></div>
-<div class="card"><h3>사진 · 표지 백업</h3><p class="mu">사진 캘린더의 사진과 직접 올린 책 표지·책등 사진은 용량이 커서 위의 JSON 백업과 따로, 이 브라우저 안에 보관돼요. 다른 기기로 옮기거나 지켜 두려면 이 파일도 내보내 주세요.</p><div class="set-row"><button data-a="mediaExp">사진·표지 내보내기</button><label class="filebtn">사진·표지 가져오기<input type="file" accept=".json,application/json" data-mimp="1"></label></div></div>`;
+<div class="card"><h3>사진 · 표지 백업</h3><p class="mu">사진 캘린더의 사진과 직접 올린 책 표지·책등 사진은 용량이 커서 위의 JSON 백업과 따로, 이 브라우저 안에 보관돼요. 다른 기기로 옮기거나 지켜 두려면 이 파일도 내보내 주세요.</p><div class="set-row"><button data-a="mediaExp">사진·표지 내보내기</button><label class="filebtn">사진·표지 가져오기<input type="file" accept=".json,application/json" data-mimp="1"></label></div></div><p class="mu" style="text-align:center;font-size:12px;margin:18px 0 4px">플래너 ${esc(BUILD)}</p>`;
 }
 
 /* ================= 13. 입력 창 ================= */
@@ -2364,8 +2365,23 @@ document.addEventListener('pointerup', () => {
   if (d.moved) { const [a, b] = slotsRange(d.a, d.b); finishPick(d.grid, a, b); }
   else tapPick(d.grid, d.a);
 });
+// 아이폰: 버튼이 아닌 칸은 click이 안 오거나 늦게 올 수 있어서, 터치를 직접 보고 알아봐요
+let tTap = null, tTapAt = 0;
+document.addEventListener('touchstart', e => {
+  const c = e.touches.length === 1 && e.target.closest && e.target.closest('.tg:not(.ro) .cell');
+  tTap = c ? { c, x: e.touches[0].clientX, y: e.touches[0].clientY, at: Date.now() } : null;
+}, { passive: true });
+document.addEventListener('touchmove', e => { if (tTap && (Math.abs(e.touches[0].clientX - tTap.x) > 10 || Math.abs(e.touches[0].clientY - tTap.y) > 10)) tTap = null; }, { passive: true });
+document.addEventListener('touchcancel', () => { tTap = null; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const k = tTap; tTap = null;
+  if (!k || Date.now() - k.at > 800 || !k.c.isConnected || document.querySelector('dialog[open]')) return;
+  e.preventDefault(); tTapAt = Date.now();   // 뒤따르는 click(새 창 위에 떨어지는 유령 클릭)을 막아요
+  tapPick(k.c.closest('.tg'), +k.c.dataset.slot);
+}, { passive: false });
 document.addEventListener('click', e => {
   const c = e.target.closest && e.target.closest('.tg:not(.ro) .cell'); if (!c) return;
+  if (Date.now() - tTapAt < 1000) return;
   // 마우스는 pointerup에서 이미 처리했어요. 아이폰 Safari의 click에는 pointerType이 없어서 바로 앞 pointerdown으로 판단해요.
   const pt = e.pointerType || lastPT; if (pt === 'mouse') return;
   tapPick(c.closest('.tg'), +c.dataset.slot);
@@ -2819,6 +2835,21 @@ function phoneLink() {
   history.replaceState(null, '', location.pathname + location.search);
   setTimeout(() => toast('구글 설정을 받았어요. 오른쪽 위 구름 버튼을 눌러 연결하면 다른 기기 기록을 불러와요'), 400);
 })();
+const BUILD = document.querySelector('meta[name=build]')?.content || '';
+let updAt = 0;
+async function checkUpdate() {
+  if (!/^https:$/.test(location.protocol) || !BUILD || Date.now() - updAt < 5 * 60e3) return; updAt = Date.now();
+  try {
+    const r = await fetch(location.pathname + '?u=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return;
+    const m = (await r.text()).match(/<meta name="build" content="([^"]+)">/); if (!m || m[1] === BUILD) return;
+    if (sessionStorage.getItem('planner.upd') === m[1]) return; sessionStorage.setItem('planner.upd', m[1]);
+    if (document.querySelector('dialog[open]') || typing()) { toast(`새 버전(${m[1]})이 있어요. 새로고침하면 바뀌어요`); return; }
+    persist(); location.reload();
+  } catch { }
+}
+setTimeout(checkUpdate, 2500);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+window.addEventListener('error', e => { if (e && e.message && !/ResizeObserver|Script error/i.test(e.message)) toast('문제가 생겼어요: ' + e.message, 'bad'); });
 document.addEventListener('visibilitychange', () => { if (document.hidden || !SY.on) return; if (tokLive()) driveSync(false); else syncUI('login', '화면을 한 번 누르면 다시 연결해요'); });
 if (SY.on) { preloadGSI(); if (tokLive()) setTimeout(() => driveSync(false), 800); }
 document.addEventListener('focusout', () => { if (pendingRender) setTimeout(() => { if (pendingRender && !typing() && !$('#m').open) { pendingRender = false; render(); } }, 60); });
