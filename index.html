@@ -8,7 +8,7 @@
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-BtEWIkLxwTSFYK++P7/CDYDEqc7Fev3vozQEQgYKoQA=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-AdTaL+m4wBbTxQH2mp4IQH2cqFA4h6b387GMC+vj4tY=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -1053,6 +1053,7 @@ function normalize(d) {
     i.title = String(i.title ?? ''); i.date ??= ''; i.time ??= ''; i.end ??= ''; i.cat ??= ''; i.memo ??= ''; i.projectId ??= '';
     i.order ??= 0; i.pri ??= ''; i.done = !!i.done; i.remind ??= i.time ? d.set.defRemind : 'none'; i.rolled ??= 0; i.hist ??= [];
   }
+  { const own = new Set(d.items.filter(i => !i.g && i.gid).map(i => i.gid)); d.items = d.items.filter(i => !i.g || !own.has(i.gid)); }
   d.version = 4;
   return d;
 }
@@ -1128,7 +1129,7 @@ function save() { persist(); render(); }
 
 /* ================= 3. 계산: 일정, 고정 일정, 기상·취침 ================= */
 const catOf = id => by(D.cats, id);
-const palOf = i => PAL[i.g ? GTOP[i.gcolor] || 'gray' : i.cat && catOf(i.cat) ? catOf(i.cat).col : 'gray'] || PAL.gray;
+const palOf = i => PAL[i.g || (i.ad && !i.cat) ? GTOP[i.gcolor] || 'gray' : i.cat && catOf(i.cat) ? catOf(i.cat).col : 'gray'] || PAL.gray;
 const colorOf = i => palOf(i)[2];
 const fillOf = i => palOf(i)[1];
 const catDot = c => (PAL[c.col] || PAL.gray)[2];
@@ -1175,7 +1176,7 @@ function frameItems(d) {
   const night = s > 1440 ? dayItems(addD(d, 1)).filter(i => i.time && itemStart(i) < s - 1440 && itemStart(i) < wakeMin(addD(d, 1))).map(i => ({ i, a: itemStart(i) + 1440, b: itemEnd(i) + 1440 })) : [];
   return { w, s, list: [...own, ...night].sort((x, y) => x.a - y.a || x.b - y.b) };
 }
-const overdue = () => D.items.filter(i => !i.done && !i.g && i.date && i.date < today()).sort((a, b) => a.date.localeCompare(b.date));
+const overdue = () => D.items.filter(i => !i.done && !i.g && !i.ad && i.date && i.date < today()).sort((a, b) => a.date.localeCompare(b.date));
 const visibleCat = i => !i.cat || !D.set.hiddenCats.includes(i.cat);
 function setDone(x, v) {
   if (x.fixed) { const lg = ruleLogOf(x.rule, x.date); if (v) lg.done = true; else delete lg.done; cleanLog(x.rule, x.date); return; }
@@ -1242,7 +1243,7 @@ function itemRow(i, o = {}) {
   const p = !o.noProj && i.projectId ? projOf(i.projectId) : null;
   return `<div class="it${i.done ? ' done' : ''}" style="--c:${colorOf(i)}"><button class="sq${i.done ? ' on' : ''}" data-a="tog" data-id="${esc(i.id)}" aria-pressed="${i.done}" aria-label="완료: ${esc(i.title)}"></button><span class="cbar"></span>`
     + `<button class="ib" data-a="open" data-id="${esc(i.id)}">${o.date ? `<span class="tm">${esc(mdw(i.date))}</span>` : ''}${i.time ? `<span class="tm">${esc(timeTxt(i))}</span>` : ''}<span class="t">${esc(i.title)}</span>${i.fixed ? '<span class="fx">고정</span>' : ''}${p ? `<span class="chip">${esc(p.title)}</span>` : ''}${i.memo ? `<span class="mu">${MEMO}</span>` : ''}${i.g ? '<span class="chip">구글</span>' : ''}${i.rolled ? `<small class="warn">미룸 ${i.rolled}</small>` : ''}</button>`
-    + `<span class="acts">${o.fwd && !i.g && !i.done && !i.fixed ? `<button class="ic" data-a="fwd" data-id="${esc(i.id)}" title="다음 날로 넘기기" aria-label="다음 날로 넘기기: ${esc(i.title)}">→</button>` : ''}${i.g ? '' : `<button class="ic del" data-a="del" data-id="${esc(i.id)}" title="${i.fixed ? '이 날만 빼기' : '삭제'}" aria-label="${i.fixed ? '이 날만 빼기' : '삭제'}: ${esc(i.title)}">${TRASH}</button>`}</span></div>`;
+    + `<span class="acts">${o.fwd && !i.g && !i.ad && !i.done && !i.fixed ? `<button class="ic" data-a="fwd" data-id="${esc(i.id)}" title="다음 날로 넘기기" aria-label="다음 날로 넘기기: ${esc(i.title)}">→</button>` : ''}${i.g ? '' : `<button class="ic del" data-a="del" data-id="${esc(i.id)}" title="${i.fixed ? '이 날만 빼기' : '삭제'}" aria-label="${i.fixed ? '이 날만 빼기' : '삭제'}: ${esc(i.title)}">${TRASH}</button>`}</span></div>`;
 }
 function planBanner() {
   const t = today(), nm = addD(mon(t), 7);
@@ -1477,7 +1478,7 @@ function vToday() {
   const groups = [...D.cats.filter(c => !isHabitCat(c.id)).map(c => ({ id: c.id, name: c.name, c: catFill(c) })), { id: '', name: '분류 없음', c: PAL.gray[1] }]
     .map(g => ({ ...g, its: main.filter(i => (i.cat && catOf(i.cat) ? i.cat : '') === g.id) })).filter(g => g.its.length)
     .map(g => ({ ...g, k: Math.min(...g.its.map(i => i.time ? itemStart(i) : 9999)) })).sort((a, b) => a.k - b.k);
-  const xb = i => i.g ? '<span class="dzx sp"></span>' : `<button class="dzx" data-a="dzDel" data-id="${esc(i.id)}" aria-label="${i.fixed ? '이 날만 빼기' : '삭제'}: ${esc(i.title)}">${XX}</button>`;
+  const xb = i => `<button class="dzx" data-a="dzDel" data-id="${esc(i.id)}" aria-label="${i.fixed ? '이 날만 빼기' : '삭제'}: ${esc(i.title)}">${XX}</button>`;
   const li = i => `<div class="dzit${i.done ? ' done' : ''}"><div class="dzi1">${dzBox(i)}<button class="dzname" data-a="open" data-id="${esc(i.id)}">${esc(i.title)}</button>${xb(i)}</div><div class="dzi2"><button class="dztime dznum" data-a="open" data-id="${esc(i.id)}">${i.time ? tspan(i) : '시간 미정'}</button></div></div>`;
   let list = groups.map(g => `<div class="dzg" style="--c:${g.c}"><div class="dzgh"><i></i>${esc(g.name)}</div>${g.its.map(li).join('')}</div>`).join('');
   // 습관: 이번 주 몇 번 했는지 (n/7)
@@ -1543,7 +1544,7 @@ function vWeek() {
   let h = `<div class="card wkcard"><div class="row"><h2 style="margin:0" class="grow">${range}</h2><button class="ic" data-a="wk" data-n="-7" aria-label="일주일 전">${CHEV(-1)}${CHEV(-1).replace('<svg', '<svg style="margin-left:-12px"')}</button><button class="ic" data-a="wk" data-n="-1" aria-label="하루 전">${CHEV(-1)}</button><button class="mini" data-a="wkToday">오늘</button><button class="ic" data-a="wk" data-n="1" aria-label="하루 뒤">${CHEV(1)}</button><button class="ic" data-a="wk" data-n="7" aria-label="일주일 뒤">${CHEV(1)}${CHEV(1).replace('<svg', '<svg style="margin-left:-12px"')}</button></div>`
     + `<div class="wkwrap" data-c="${wcenter}"><div class="wkg"><span class="wkc"></span>${heads}<span class="wkc wkc2">종일</span>${alls}<div class="wkh">${labels}</div>${cols}</div></div>`
     + `<p class="mu" style="font-size:12.5px;margin:10px 2px 0">가운데가 ${wcenter === t ? '오늘' : esc(mdw(wcenter))}이에요. 칸을 끌거나 시작 칸·끝 칸을 차례로 누르면 그 날 그 시간으로 일정을 넣어요. 날짜를 누르면 그날 화면으로 가요. 빗금은 기상 전·취침 뒤예요.</p></div>`;
-  const und = D.items.filter(i => !i.done && !i.g && i.date && i.date < t).sort((a, b) => a.date.localeCompare(b.date));
+  const und = D.items.filter(i => !i.done && !i.g && !i.ad && i.date && i.date < t).sort((a, b) => a.date.localeCompare(b.date));
   if (und.length) h += `<div class="card"><h3>못 끝낸 일 ${und.length}개 <small>날짜를 누르면 그날로 옮겨요</small></h3>${und.map(i => `<div class="it" style="--c:${colorOf(i)}"><span class="cbar"></span><button class="ib" data-a="open" data-id="${esc(i.id)}"><span class="tm">${esc(mdw(i.date))}</span><span class="t">${esc(i.title)}</span></button><span class="row" style="gap:2px">${days.filter(d => d >= t).map(d => `<button style="padding:2px 7px;font-size:12px" data-a="assign" data-id="${esc(i.id)}" data-d="${d}">${DOW[wd(d)]} ${+d.slice(8)}</button>`).join('')}</span><button class="ic del" data-a="del" data-id="${esc(i.id)}" aria-label="삭제: ${esc(i.title)}">${TRASH}</button></div>`).join('')}</div>`;
   h += `<div class="card"><div class="row"><h3 class="grow" style="margin:0">고정 일정</h3><button data-a="newRule">＋ 고정 일정</button></div><div class="row" style="margin-top:8px">${D.rules.map(r => `<button class="lg${r.active ? '' : ' off'}" style="--c:${colorOf(r)};padding:3px 0" data-a="editRule" data-id="${esc(r.id)}"><i></i>${esc(r.title)} <small>${esc(ruleSum(r))}</small></button>`).join('') || '<small>매주 반복되는 일을 넣어 두면 자동으로 채워져요.</small>'}</div></div>`;
   const wk0 = mon(wcenter);
@@ -2123,19 +2124,19 @@ function openItem(id, pre = {}) {
   if (String(id).startsWith('r:')) return openOcc(id);
   const nw = !id, x = nw ? { id: uid(), title: '', date: today(), time: '', end: '', cat: '', memo: '', projectId: '', order: 0, pri: '', done: false, remind: '', rolled: 0, hist: [], ...pre } : by(D.items, id);
   if (!x) return;
-  const ro = !!x.g, dis = ro ? ' disabled' : '', m = $('#m');
+  const ro = false, dis = '', m = $('#m'), gev = !!(x.g || x.ad);
   const rem = x.remind || (x.time ? D.set.defRemind : 'none');
-  m.innerHTML = `<form method="dialog" class="itemf"><div class="row"><input name="title" class="ttl" required value="${esc(x.title)}" placeholder="제목" aria-label="제목"${ro ? ' readonly' : ''}><label class="ck"><input type="checkbox" name="done"${x.done ? ' checked' : ''}>완료</label></div>
+  m.innerHTML = `<form method="dialog" class="itemf"${gev ? ' data-g="1"' : ''}><div class="row"><input name="title" class="ttl" required value="${esc(x.title)}" placeholder="제목" aria-label="제목"${ro ? ' readonly' : ''}><label class="ck"><input type="checkbox" name="done"${x.done ? ' checked' : ''}>완료</label></div>
 <div class="g3"><label>날짜<input type="date" name="date" value="${esc(x.date)}"${dis}></label><div class="lbl">시작${TP('name="time"', x.time, { lab: '시작', dis: ro })}</div><div class="lbl">끝${TP('name="end"', x.end, { lab: '끝', dis: ro })}</div></div>
 <label>분류</label><div class="cats">${catChips(x.cat, dis)}</div>
 <div class="g2"><label>프로젝트${projSelect(x.projectId).replace('<select', `<select${dis}`)}</label><label>중요도<select name="pri"${dis}>${[['', '없음'], ['A', 'A · 꼭'], ['B', 'B · 해야 함'], ['C', 'C · 하면 좋음']].map(([a, b]) => `<option value="${a}"${(x.pri || '') === a ? ' selected' : ''}>${b}</option>`).join('')}</select></label></div>
 <label>알림<select name="remind">${remindOpts(!!x.time, rem)}</select></label>
 <label>메모<textarea name="memo" rows="6" placeholder="장소, 준비물, 링크, 떠오른 생각 …">${esc(x.memo)}</textarea></label>
-${ro ? '<p class="mu">구글 캘린더에서 불러온 일정이에요. 내용은 구글에서 고치고, 여기서는 메모와 완료만 남길 수 있어요.</p>' : ''}
-<div class="row end">${nw || ro ? '' : `<button type="button" class="dg" data-a="del" data-id="${esc(x.id)}">${TRASH} 삭제</button>`}<span class="grow"></span><button value="no" formnovalidate>닫기</button><button value="ok" class="pri">저장</button></div></form>`;
+${gev ? `<p class="mu gnote">${x.gro ? '구글 캘린더 일정이에요. 다른 사람이 만든 일정이라 구글에는 반영되지 않고, 플래너에서만 바뀌어요.' : '구글 캘린더 일정이에요. 제목 · 날짜 · 시간 · 분류 색 · 알림을 고치면 구글 캘린더에도 반영돼요. 메모와 완료는 플래너에만 남아요.'}</p>` : ''}
+<div class="row end">${nw ? '' : `<button type="button" class="dg" data-a="${gev ? 'dzDel' : 'del'}" data-id="${esc(x.id)}">${TRASH} 삭제</button>`}<span class="grow"></span><button value="no" formnovalidate>닫기</button><button value="ok" class="pri">저장</button></div></form>`;
   m.onclose = () => {
     if (m.returnValue !== 'ok') return;
-    const f = m.querySelector('form'), fd = new FormData(f);
+    const f = m.querySelector('form'), fd = new FormData(f), g0 = x.g ? gSnap(x) : null;
     if (!ro) {
       x.title = String(fd.get('title') || '').trim(); x.date = fd.get('date') || ''; x.time = fd.get('time') || ''; x.end = fd.get('end') || '';
       x.cat = fd.get('cat') || ''; x.pri = fd.get('pri') || '';
@@ -2148,6 +2149,8 @@ ${ro ? '<p class="mu">구글 캘린더에서 불러온 일정이에요. 내용�
     const dn = f.elements.namedItem('done').checked; if (x.done !== dn) setDone(x, dn);
     x.updatedAt = Date.now();
     if (nw) { x.createdAt = Date.now(); D.items.push(x); }
+    // 불러온 구글 일정: 완료·메모 말고 바뀐 게 있으면 플래너가 맡아서 구글에도 반영해요
+    if (g0 && (gChanged(x, g0) || (x.projectId || '') !== g0.projectId || (x.pri || '') !== g0.pri)) gAdopt(x, g0);
     save(); autoSync(x);
   };
   m.returnValue = ''; m.showModal();
@@ -2237,7 +2240,7 @@ function openGoal() {
   m.returnValue = ''; m.showModal();
 }
 function openInbox(d) {
-  const T0 = today(), t = d && d.d && d.d >= T0 ? d.d : T0, lb = t === T0 ? '오늘' : relDay(t, T0), od = overdue(), left = t > T0 ? D.items.filter(i => !i.done && !i.g && i.date === T0) : [], loose = D.items.filter(i => !i.date && !i.done && !i.g && !i.projectId);
+  const T0 = today(), t = d && d.d && d.d >= T0 ? d.d : T0, lb = t === T0 ? '오늘' : relDay(t, T0), od = overdue(), left = t > T0 ? D.items.filter(i => !i.done && !i.g && !i.ad && i.date === T0) : [], loose = D.items.filter(i => !i.date && !i.done && !i.g && !i.projectId);
   const nexts = D.projects.filter(p => p.status === '진행 중').map(p => stepsOf(p.id).find(i => !i.done && !i.date)).filter(Boolean);
   const sec = (title, arr) => arr.length ? `<h4>${title}</h4>${arr.map(i => `<label class="ck" style="display:flex!important;margin:6px 0!important"><input type="checkbox" name="pick" value="${esc(i.id)}"><span>${i.date ? `<small>${esc(mdw(i.date))}</small> ` : ''}${esc(i.title)}${i.projectId && projOf(i.projectId) ? ` <span class="chip">${esc(projOf(i.projectId).title)}</span>` : ''}</span></label>`).join('')}` : '';
   const body = sec('못 끝낸 일', od) + sec('오늘 남은 일', left) + sec('날짜 없는 할 일', loose) + sec("프로젝트의 '지금 할 일'", nexts);
@@ -2274,6 +2277,7 @@ function delItem(id) {
   }
   const k = D.items.findIndex(i => i.id === id); if (k < 0) return;
   const x = D.items[k]; D.items.splice(k, 1);
+  if (x.g) gAdopt(x, gSnap(x));
   if (x.gid && !x.g) D.gDel.push(x.gid);
   UNDO = { kind: 'item', x, k };
   if ($('#m').open) { $('#m').returnValue = 'no'; $('#m').close(); }
@@ -2432,11 +2436,11 @@ async function G(path, o = {}) {
   return j;
 }
 const calOK = x => { const c = catOf(x.cat); return !(c && c.noCal); };
-const syncable = i => !i.g && !i.fixed && !!i.date && calOK(i);
+const syncable = i => !i.g && !i.fixed && !!i.date && (i.ad ? !i.gro && !!i.gid : calOK(i));
 const ruleSendable = r => r.active && r.days.length > 0 && calOK(r);
 // 보내지 않기로 한 일정이 구글에 남아 있으면 지울 목록에 넣어요
 function gPrune() {
-  for (const i of D.items) if (!i.g && i.gid && !syncable(i)) { D.gDel.push(i.gid); i.gid = ''; i.syncedAt = 0; }
+  for (const i of D.items) if (!i.g && !i.ad && i.gid && !syncable(i)) { D.gDel.push(i.gid); i.gid = ''; i.syncedAt = 0; }
   for (const r of D.rules) if (r.gid && !ruleSendable(r)) { D.gDel.push(r.gid); r.gid = ''; r.syncedAt = 0; }
 }
 const isDirty = i => !i.gid || (i.updatedAt || 0) > (i.syncedAt || 0);
@@ -2454,7 +2458,26 @@ function timeBody(date, time, end) {
   const e = end || addMin(time, 60), ed = toMin(e) <= toMin(time) ? addD(date, 1) : date;
   return { start: { dateTime: `${date}T${time}:00`, timeZone: tz }, end: { dateTime: `${ed}T${e}:00`, timeZone: tz } };
 }
+// 불러온 구글 일정을 플래너가 맡을 때: 고치기 전 모습을 기억해 두고, 바뀐 것만 구글에 보내요
+const gSnap = x => ({ title: x.title, date: x.date, time: x.time, end: x.end, cat: x.cat || '', remind: x.remind || 'none', projectId: x.projectId || '', pri: x.pri || '' });
+const gChanged = (x, o) => x.title !== o.title || x.date !== o.date || x.time !== o.time || x.end !== o.end || (x.cat || '') !== o.cat || (x.remind || 'none') !== o.remind;
+function gAdopt(x, o) { delete x.g; x.ad = 1; x.go = { title: o.title, date: o.date, time: o.time, end: o.end, cat: o.cat, remind: o.remind }; x.updatedAt = Date.now(); x.syncedAt = 0; }
+function gRefresh(a, e) {
+  const s = e.start.dateTime || e.start.date, en = e.end?.dateTime || '';
+  Object.assign(a, { title: e.summary || '(제목 없음)', date: s.slice(0, 10), time: e.start.dateTime ? s.slice(11, 16) : '', end: en ? en.slice(11, 16) : '', gcolor: +e.colorId || 0, gdays: e.start.date && e.end?.date ? diffD(e.start.date, e.end.date) : 0, getag: e.etag });
+  a.go = { title: a.title, date: a.date, time: a.time, end: a.end, cat: a.cat || '', remind: a.remind || 'none' };
+  a.syncedAt = Math.max(a.updatedAt || 0, Date.now());
+}
+function gAdBody(i) {
+  const o = i.go || {}, b = { extendedProperties: { private: { planner: 'item', pid: i.id } } };
+  if (i.title !== o.title) b.summary = i.title;
+  if (i.date !== o.date || i.time !== o.time || i.end !== o.end) { const tb = timeBody(i.date, i.time, i.end); if (!i.time && i.gdays > 1) tb.end = { date: addD(i.date, i.gdays) }; Object.assign(b, tb); }
+  if ((i.cat || '') !== (o.cat || '')) { const c = catOf(i.cat); b.colorId = c ? String(c.g) : (i.gcolor ? String(i.gcolor) : null); }
+  if ((i.remind || 'none') !== (o.remind || 'none')) b.reminders = (i.remind || 'none') === 'none' ? { useDefault: true } : { useDefault: false, overrides: remOverrides(i) };
+  return b;
+}
 function gBody(i) {
+  if (i.ad) return gAdBody(i);
   const c = catOf(i.cat), p = projOf(i.projectId);
   const desc = [i.memo, p ? `프로젝트: ${p.title}` : '', c ? `분류: ${c.name}` : ''].filter(Boolean).join('\n\n');
   return { summary: (i.done ? '✓ ' : '') + i.title, description: desc, ...timeBody(i.date, i.time, i.end), colorId: c ? String(c.g) : null, reminders: { useDefault: false, overrides: remOverrides(i) }, extendedProperties: { private: { planner: 'item', pid: i.id } } };
@@ -2478,9 +2501,14 @@ async function syncObj(x, body) {
 async function syncObj0(x, body) {
   const b = JSON.stringify(body);
   if (x.gid) {
-    try { await G('events/' + encodeURIComponent(x.gid), { method: 'PATCH', body: b }); }
-    catch (e) { if (e.status === 404 || e.status === 410) { x.gid = ''; return syncObj0(x, body); } throw e; }
-  } else x.gid = (await G('events', { method: 'POST', body: b })).id;
+    try { const r = await G('events/' + encodeURIComponent(x.gid), { method: 'PATCH', body: b }); if (x.ad && r && r.etag) x.getag = r.etag; }
+    catch (e) {
+      if (e.status === 404 || e.status === 410) { x.gid = ''; if (x.ad) { x.ad = 0; delete x.go; delete x.gro; body = gBody(x); } return syncObj0(x, body); }
+      // 다른 사람이 만든 일정이라 고칠 수 없으면, 플래너에서만 바뀐 채로 둬요
+      if (e.status === 403 && x.ad) { x.gro = 1; x.syncedAt = Date.now(); toast(`'${x.title}'은(는) 다른 사람이 만든 일정이라 구글 캘린더에는 바꾸지 못했어요. 플래너에서만 바뀌어요.`); return; }
+      throw e;
+    }
+  } else { const r = await G('events', { method: 'POST', body: b }); x.gid = r.id; if (x.ad && r.etag) x.getag = r.etag; }
   x.syncedAt = Date.now();
 }
 const syncItem = i => syncObj(i, gBody(i));
@@ -2538,12 +2566,17 @@ async function pull() {
   const mine = new Set([...D.items.filter(i => !i.g).map(i => i.gid), ...D.rules.map(x => x.gid), D.set.weeklyGid, ...D.gDel].filter(Boolean));
   const old = new Map(D.items.filter(i => i.g).map(i => [i.gid, i]));
   D.items = D.items.filter(i => !i.g);
+  const adm = new Map(D.items.filter(i => i.ad && i.gid).map(i => [i.gid, i])), seen = new Set();
   for (const e of r.items || []) {
+    const a = adm.get(e.id);
+    if (a) { seen.add(e.id); if (e.status !== 'cancelled' && e.etag && e.etag !== a.getag && !isDirty(a)) gRefresh(a, e); continue; }
     if (mine.has(e.id) || mine.has(e.recurringEventId) || e.status === 'cancelled' || isMine(e) || /^(📌|✓)/u.test(String(e.summary || '').trim())) continue;
     const s = e.start.dateTime || e.start.date, en = e.end?.dateTime || '', prev = old.get(e.id) || {};
-    D.items.push({ id: prev.id || uid(), g: 1, gid: e.id, title: e.summary || '(제목 없음)', date: s.slice(0, 10), time: e.start.dateTime ? s.slice(11, 16) : '', end: en ? en.slice(11, 16) : '', gcolor: +e.colorId || 0, cat: (D.cats.find(c => String(c.g) === String(e.colorId)) || {}).id || '', memo: prev.memo || '', done: !!prev.done, projectId: '', order: 0, pri: '', remind: 'none', rolled: 0, hist: [] });
+    D.items.push({ id: prev.id || uid(), g: 1, gid: e.id, getag: e.etag || '', title: e.summary || '(제목 없음)', date: s.slice(0, 10), time: e.start.dateTime ? s.slice(11, 16) : '', end: en ? en.slice(11, 16) : '', gcolor: +e.colorId || 0, gdays: e.start.date && e.end?.date ? diffD(e.start.date, e.end.date) : 0, cat: (D.cats.find(c => String(c.g) === String(e.colorId)) || {}).id || '', memo: prev.memo || '', done: !!prev.done, projectId: '', order: 0, pri: '', remind: 'none', rolled: 0, hist: [] });
   }
-  D = normalize(D); save(); toast(`구글 일정 ${D.items.filter(i => i.g).length}개를 불러왔어요`);
+  // 맡은 일정이 구글에서 지워졌으면 (모두 받아 왔을 때만 판단해요)
+  if (!r.nextPageToken) { const a0 = from.slice(0, 10), b0 = to.slice(0, 10); D.items = D.items.filter(i => !(i.ad && i.gid && !seen.has(i.gid) && i.date > a0 && i.date < b0 && !isDirty(i) && !D.gDel.includes(i.gid))); }
+  D = normalize(D); save(); toast(`구글 일정 ${D.items.filter(i => i.g || i.ad).length}개를 불러왔어요`);
 }
 async function weeklyToggle() {
   const S = D.set;
@@ -2857,7 +2890,7 @@ const A = {
   del: d => delItem(d.id),
   undo: () => {
     if (!UNDO) return;
-    if (UNDO.kind === 'item') { const x = UNDO.x, q = D.gDel.indexOf(x.gid); if (q >= 0) D.gDel.splice(q, 1); else if (x.gid) { x.gid = ''; x.syncedAt = 0; } D.items.splice(Math.min(UNDO.k, D.items.length), 0, x); autoSync(x); }
+    if (UNDO.kind === 'item') { const x = UNDO.x, q = D.gDel.indexOf(x.gid); if (q >= 0) D.gDel.splice(q, 1); else if (x.gid) { x.gid = ''; x.syncedAt = 0; if (x.ad) { x.ad = 0; delete x.go; delete x.gro; } } D.items.splice(Math.min(UNDO.k, D.items.length), 0, x); autoSync(x); }
     if (UNDO.kind === 'skip') { const lg = ruleLogOf(UNDO.rule, UNDO.d); delete lg.skip; cleanLog(UNDO.rule, UNDO.d); }
     if (UNDO.kind === 'ref') { const p = projOf(UNDO.pid); if (p) p.refs.splice(UNDO.k, 0, UNDO.r); }
     UNDO = null; save(); toast('되돌렸어요');
@@ -2883,7 +2916,7 @@ const A = {
   wsEdit: d => { const w = by(D.work, d.id); if (!w) return; openTimeEdit(d.f === 'in' ? '출근 시각' : '퇴근 시각', w[d.f], v => { if (!v && d.f === 'in') D.work = D.work.filter(x => x !== w); else w[d.f] = v; save(); }); },
   timeClear: () => $('#m').close('clear'),
   sessEdit: d => openSess(d.d),
-  dzDel: async d => { const x = getItem(d.id); if (!x) return; const r = await dzAsk(x.fixed ? '이 날만 뺄까요?' : '일정을 취소하겠습니까?', x.fixed ? `고정 일정 '${x.title}'을(를) ${md(x.date)}만 시간표와 목록에서 빼요.` : `'${x.title}'을(를) 시간표와 목록에서 지워요.`, [['no', '아니요'], ['yes', '네', 'pri']]); if (r === 'yes') delItem(d.id); },
+  dzDel: async d => { const x = getItem(d.id); if (!x) return; const r = await dzAsk(x.fixed ? '이 날만 뺄까요?' : '일정을 취소하겠습니까?', x.fixed ? `고정 일정 '${x.title}'을(를) ${md(x.date)}만 시간표와 목록에서 빼요.` : x.g || (x.ad && x.gid && !x.gro) ? `'${x.title}'을(를) 시간표와 목록, 구글 캘린더에서 지워요.` : `'${x.title}'을(를) 시간표와 목록에서 지워요.`, [['no', '아니요'], ['yes', '네', 'pri']]); if (r === 'yes') delItem(d.id); },
   memoOpen: d => openMemo(d.d),
   quickNew: d => openQuick({ date: d.d }),
   quickMore,
@@ -3017,7 +3050,7 @@ document.addEventListener('input', e => {
     if (t.dataset.note) D.notes[t.dataset.note] = t.value; else D.weekNotes[t.dataset.wn] = t.value;
     clearTimeout(noteT); noteT = setTimeout(persist, 400);
   }
-  if (t.name === 'time' && t.form && t.form.classList.contains('itemf')) { const s = t.form.elements.namedItem('remind'), v = s.value; s.innerHTML = remindOpts(!!t.value, t.value && v === 'none' ? D.set.defRemind : v); }
+  if (t.name === 'time' && t.form && t.form.classList.contains('itemf')) { const s = t.form.elements.namedItem('remind'), v = s.value; s.innerHTML = remindOpts(!!t.value, t.value && v === 'none' && !t.form.dataset.g ? D.set.defRemind : v); }
 });
 document.addEventListener('change', e => {
   const t = e.target, s = t.dataset.s;
