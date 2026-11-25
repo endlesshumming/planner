@@ -8,7 +8,7 @@
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-2t1v0bEjqAp47hQsp9iRFMiLwa+J+XUVQxh5fqVRG4E=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-FKmlaT6uNDEq8aLONXys9ATEYUhZ9TM/vYsLgw3YG6w=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -739,6 +739,187 @@ details summary{cursor:pointer;font-weight:600;color:var(--tx2)}
 .syncb.err{color:var(--bad);border-color:#f3c9c7;background:#fff6f5}
 .syncb.wait{color:var(--mu)}
 @media(max-width:680px){.syncb{margin-left:auto}}
+/* ===== v17 다이어리 디자인 (홈 · 달력 · 오늘): 한글 Apple SD 산돌고딕 Neo, 숫자 Helvetica Neue ===== */
+.dz,dialog.dzm{--r:22.5px;--lc:44px;--ol:#6b744f;--tl:#5fcfc4;--tld:#3dbdb1;--tl2:#b4f4ee;--ln:#ededed;--gl:#e3e3e3;--g1:#8e8e93;--g2:#c0c0c5;--ink:#1d1d1f;
+  font-family:"Helvetica Neue",Helvetica,Arial,SDG,"Apple SD Gothic Neo",-apple-system,"Malgun Gothic",system-ui,sans-serif;color:var(--ink);letter-spacing:-.01em}
+.dz{--c1:calc((100cqw - var(--lc) - 10px) * .4 - 6px);container-type:inline-size;max-width:720px;margin:0 auto;font-size:13px;line-height:var(--r)}
+:where(.dz,dialog.dzm) button{font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;border-radius:0;padding:0;margin:0;white-space:normal;text-align:left;line-height:inherit;min-height:0}
+:where(.dz,dialog.dzm) button:hover:not(:disabled){background:none}
+:where(.dz) small{font-size:11px;color:var(--g1);line-height:inherit}
+.dz .mu,dialog.dzm .mu{color:var(--g2)}
+.dznum{font-weight:300;font-variant-numeric:tabular-nums}
+.dzu{color:var(--g1);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer}
+.dzu.on{color:var(--tld)}
+.dz .dzu:hover:not(:disabled){color:var(--ink)}
+/* 맨 위 */
+.dzh{display:grid;grid-template-columns:var(--lc) calc(var(--c1) + 6px) minmax(0,1fr);column-gap:10px;align-items:start;margin-bottom:calc(var(--r) * 1.6)}
+.dzyc{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.dzy{font-size:13px;font-weight:700;line-height:1;margin-top:5px;letter-spacing:0}
+.dznav{display:flex;gap:2px;margin:8px 0 0 -4px}
+.dznav button{width:20px;height:24px;font-size:20px!important;line-height:22px!important;color:var(--g2)!important;text-align:center!important;font-weight:300}
+.dznav button:hover:not(:disabled){color:var(--ink)!important}
+.dzrel{display:block;font-size:11px!important;color:var(--ol)!important;line-height:1.3!important;margin-top:2px}
+.dzback{display:block;font-size:11px!important;line-height:1.5!important;margin-top:2px}
+.dzbig{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:60px;font-weight:200;line-height:.86;letter-spacing:-.03em;margin-left:-8px;padding-top:2px;color:var(--ink)}
+.dzbig.dzstk span{display:block}
+.dzmini{display:grid!important;grid-template-columns:repeat(7,19px);font-size:9.5px!important;line-height:14px!important;text-align:center!important;color:#3a3a3c;font-weight:400;cursor:pointer;margin-top:2px!important}
+.dzmini .w{font-weight:500}
+.dzmini .b{font-weight:700;color:#000}
+.dzplan{margin:calc(var(--r) * -1) 0 var(--r)}
+.dzplan .banner{border:0;border-radius:0;background:#fffef0;box-shadow:none;padding:8px 10px;margin:0;font-size:12px;gap:8px}
+.dzplan .banner button{font-size:12px}
+/* 줄 노트 */
+.dzs{margin-top:var(--r)}
+.dzh+.dzs,.dzplan+.dzs{margin-top:0}
+.dzr{display:grid;grid-template-columns:var(--lc) minmax(0,1fr);column-gap:10px}
+.dzl,.dzv{border-bottom:1px solid var(--ln);min-height:var(--r)}
+.dzs>.dzr:first-child>.dzl,.dzs>.dzr:first-child>.dzv{border-top:1px solid var(--ln)}
+.dzr.nol>.dzl{border:0!important}
+.dzl{color:var(--ol);text-align:center;font-size:12.5px;white-space:nowrap;line-height:calc(var(--r) - 1px);letter-spacing:.02em}
+.dzv{display:flex;align-items:center;min-width:0;padding-left:6px}
+.c1{flex:0 0 var(--c1);width:var(--c1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c2{flex:1 1 auto;min-width:0;margin-left:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dzgo{display:flex!important;align-items:center;flex:1 1 auto;min-width:0;align-self:stretch;cursor:pointer}
+.dzb{font-weight:600}
+.dzlog{display:flex;align-items:center;gap:6px;color:var(--g1);overflow:visible}
+.dzk{color:var(--g1)}
+.dzt{font-weight:400;color:#48484a;font-variant-numeric:tabular-nums}
+.dzt.mu{color:var(--g2)}
+.dzdot{font-style:normal;color:var(--g2);margin:0 -1px}
+.dzdd{font-size:17px;font-weight:300;letter-spacing:0}
+.dzsm{flex:0 0 auto;font-size:11px!important;margin:0 2px 0 8px!important}
+.dzbar{display:block;height:7px;background:#f0f0f3;overflow:hidden}
+.dzbar i{display:block;height:100%;background:var(--tl)}
+.dznext{font-weight:400;color:var(--g1);font-size:11px;margin-right:6px}
+.dznow .dzleft{color:var(--tld)}
+.dztodo .dztt{font-weight:600}
+.dztodo .dznum{color:var(--g2);font-size:13px}
+.dzgo.done .dztt{font-weight:400;color:var(--g2)}
+.dzc{position:relative;flex:0 0 auto;width:13px!important;height:13px!important;border:1px solid #c7c7cc!important;background:#fff!important;cursor:pointer;margin:0 3px 0 8px!important}
+.dzc .ckm{position:absolute;left:-1px;top:-9px;width:19px;height:21px;color:var(--tl);pointer-events:none}
+.dzc:disabled{opacity:.4}
+.dzfocus .dzv{justify-content:space-between}
+.dzfr{display:flex;align-items:center;gap:10px;margin-left:auto;padding-right:2px}
+.dzfr .dzt{font-size:13px;font-weight:300}
+.dzfr .dzt.run{color:var(--ink);font-weight:400}
+.dzchartr>.dzl,.dzchartr>.dzv{border-bottom:0}
+.dzchartr+.dzr>.dzl,.dzchartr+.dzr>.dzv{border-top:1px solid var(--ln)}
+.dzchart{display:block;width:100%;height:auto;margin:10px 0 4px;overflow:visible}
+.dzchart .dzax{font-size:9.5px;fill:#8e8e93;font-family:"Helvetica Neue",Helvetica,Arial,SDG,"Apple SD Gothic Neo",sans-serif;font-weight:300}
+.dzchart rect.w{fill:var(--tl2)}
+.dzchart rect.f{fill:var(--tl)}
+.dzchart .dzbr{cursor:pointer;outline:none}
+.dzchart .dzbr:hover rect.w,.dzchart .dzbr:focus-visible rect.w{fill:#9cebe3}
+.dzrange{display:flex;gap:22px}
+.dzrange button{color:var(--g1)!important}
+.dzrange button.on{color:var(--ink)!important;font-weight:700}
+.dzlg{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--g1);padding-right:2px}
+.dzlg i{display:inline-block;width:13px;height:7px;border-radius:2px;margin-left:10px}
+.dzlg i.w{background:var(--tl2)}
+.dzlg i.f{background:var(--tl)}
+/* 달력 */
+.dzcal{margin-left:calc(var(--lc) + 10px)}
+.dzwh{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:20px;font-weight:300;line-height:1;padding-bottom:5px;border-bottom:1px solid var(--ln)}
+.dzwh .sun{color:var(--ol)}
+.dzwh .sat{color:var(--g2)}
+.dzwk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));box-sizing:content-box;height:calc(var(--r) * 4);background:repeating-linear-gradient(to bottom,transparent 0 calc(var(--r) - 1px),var(--ln) calc(var(--r) - 1px) var(--r))}
+.dzcd{display:flex!important;flex-direction:column;align-items:center;min-width:0;height:100%;overflow:hidden;cursor:pointer}
+button.dzcd:hover:not(:disabled){background:rgba(95,207,196,.07)!important}
+.dzcd .dn{align-self:center;min-width:0;border-radius:0;color:var(--ink);font-size:21px;font-weight:300;line-height:calc(var(--r) + 1px);height:var(--r);letter-spacing:-.02em}
+.dzcd.sun .dn{color:var(--ol)}
+.dzcd.td .dn{font-weight:700}
+.dzchips{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:3px}
+.dzchip{display:block;min-width:31px;height:13px;padding:0 2px;font-size:9.5px;line-height:13px;text-align:center;background:var(--f);color:#5a5a5f;white-space:nowrap;letter-spacing:-.04em;font-weight:400}
+.dzchip.done{opacity:.5}
+.dzcal .dzmore{display:block;width:31px;text-align:right;font-size:9.5px;line-height:12px;color:var(--g1);white-space:nowrap}
+.dzproj{margin-top:calc(var(--r) * 1.2)}
+.dzpv{color:var(--ink);cursor:pointer}
+.dzpv i{font-style:normal;margin-right:9px}
+.dzproj .dzmore{color:var(--g1)!important;font-size:11px}
+/* 오늘 */
+.dzday{display:grid;grid-template-columns:calc(var(--lc) + 16px + var(--c1)) minmax(0,1fr);column-gap:10px;align-items:start}
+.dzgrid{min-width:0}
+.dz .tg{border:0;border-radius:0;overflow:visible;background:none}
+.dz .tgr{grid-template-columns:var(--lc) minmax(0,1fr);column-gap:10px;border-bottom:0}
+.dz .tgr .h{font-size:13px;font-weight:300;line-height:calc(var(--r) - 1px);border-right:0;color:#3a3a3c;text-align:center;letter-spacing:0}
+.dz .tgr.nowr .h{font-weight:700;color:#000}
+.dz .cells{grid-template-rows:calc(var(--r) - 1px);border-bottom:1px solid var(--gl);border-left:1px solid var(--gl)}
+.dz .tgr:first-child .cells{border-top:1px solid var(--gl)}
+.dz .cell,.dz .cell:nth-child(6){border-right:1px solid var(--gl)}
+.dz .cell.nowc{background:rgba(95,207,196,.13);box-shadow:none}
+.dz .cell.selc{background:rgba(95,207,196,.28)}
+.dz .blk{border:0!important;border-radius:1px;margin:3px -2px;padding:0 2px;background:color-mix(in srgb,var(--f) 74%,transparent);mix-blend-mode:multiply;font-size:9.5px;font-weight:400;color:#6e6e73;line-height:calc(var(--r) - 7px);text-align:center;letter-spacing:-.04em}
+.dz .blk:hover:not(:disabled){background:color-mix(in srgb,var(--f) 100%,transparent);filter:none}
+.dz .blk.done{opacity:.55}
+.dz .blk.lane{align-self:start;margin:calc(2px + (var(--r) - 6px) / var(--n) * var(--k)) -2px 0;height:calc((var(--r) - 6px) / var(--n) + 1.5px);line-height:calc((var(--r) - 6px) / var(--n) + 1.5px);font-size:8px}
+.dz .blk.lane.n3{font-size:0}
+.dzmemo{display:block!important;width:100%;margin-top:calc(var(--r) * 1.3)!important;background:#fffef0!important;padding:12px 14px 14px!important;cursor:pointer}
+.dzmemo b{display:block;font-weight:400;font-size:12px;color:#3a3a3c;line-height:1.4;margin-bottom:9px}
+.dzmt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:11.5px;line-height:21px;color:#48484a;white-space:pre-line;text-align:justify;word-break:break-all}
+.dzlist{min-width:0}
+.dzg{margin-bottom:var(--r)}
+.dzgh{display:flex;align-items:center;gap:8px;line-height:var(--r);color:#3a3a3c}
+.dzgh i{width:11px;height:11px;border-radius:50%;background:var(--c)}
+.dzi1,.dzi2{display:flex;align-items:center;min-height:var(--r);background:linear-gradient(var(--ln),var(--ln)) no-repeat 22px 100%/calc(100% - 22px) 1px}
+.dzi1 .dzc{margin:0 8px 0 1px!important}
+.dzname{flex:1 1 auto;min-width:0;font-weight:600;line-height:1.35!important;padding:3px 0!important;overflow-wrap:anywhere;word-break:keep-all;cursor:pointer}
+.dzit.done .dzname{text-decoration:line-through;text-decoration-color:#9a9aa0;color:var(--g2);font-weight:400}
+.dzx{flex:0 0 auto;width:22px;height:22px;display:grid!important;place-items:center;color:var(--g2)!important;cursor:pointer}
+.dzx svg{width:13px;height:13px}
+.dzx:hover:not(:disabled){color:var(--ink)!important}
+.dzx.sp{visibility:hidden}
+.dzi2{padding-left:22px}
+.dztime{color:var(--tl)!important;font-size:13px;font-weight:400;cursor:pointer}
+.dzhab .dzname{font-weight:600}
+.dzwk7{font-size:10px!important;color:var(--g1);margin:0 0 0 6px;white-space:nowrap}
+.dzod{display:flex;align-items:center;gap:10px;margin-bottom:calc(var(--r) / 2)}
+.dzadd{font-size:12px!important}
+.dzempty{font-size:12px;line-height:1.6;margin:0 0 var(--r)}
+/* 팝업 (같은 서체 · 색) */
+dialog.dzm{border-radius:6px;width:min(94vw,420px);padding:18px 18px 14px;font-size:13.5px;--r:32px;box-shadow:0 12px 34px rgba(0,0,0,.14)}
+dialog.dzm .dzs{margin:0}
+.dzqh{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.dzqh b{font-size:16px;font-weight:600}
+.dzqh .dzqd{order:2;margin-left:auto;color:var(--ol);font-size:12px}
+dialog.dzm .dzr.tall .dzl{line-height:34px}
+.dzqt{display:flex;align-items:center;gap:6px}
+.dzdash{color:var(--g2);margin:0 2px}
+dialog.dzm .dztp select{border:0;background:none;padding:2px 1px;font-size:16px;font-weight:300;font-family:inherit;color:var(--ink);-webkit-appearance:none;appearance:none;cursor:pointer}
+dialog.dzm .dztp .tp-c{color:var(--g2);font-weight:300}
+dialog.dzm .dzin{border:0;border-radius:0;padding:0;width:100%;background:none;font-size:16px;font-weight:600;line-height:30px;outline:none}
+dialog.dzm .dzin::placeholder{color:var(--g2);font-weight:400}
+dialog.dzm .dzv:focus-within{border-bottom-color:var(--tl)}
+.dztin{border:0!important;background:none!important;padding:0!important;font-family:inherit;font-weight:300;font-size:16px!important;width:auto;color:var(--ink)}
+.dzcats{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}
+.dzcat{position:relative}
+.dzcat input{position:absolute;opacity:0;pointer-events:none}
+.dzcat span{display:inline-block;background:var(--f);padding:2px 8px;font-size:12.5px;line-height:18px;color:#48484a;border:1px solid transparent;cursor:pointer}
+.dzcat input:checked+span{border-color:#3a3a3c;color:var(--ink);font-weight:600}
+.dzcat input:focus-visible+span{outline:2px solid var(--tl);outline-offset:1px}
+.dzqf{display:flex;align-items:center;gap:16px;margin-top:16px}
+.dzlink{color:var(--g1)!important}
+.dzsave{background:var(--tl)!important;color:#fff!important;font-weight:600!important;padding:5px 18px!important;border-radius:3px!important;text-align:center!important}
+.dzsave:hover:not(:disabled){background:var(--tld)!important}
+.dzmemof textarea{width:100%;border:0;border-radius:0;padding:0 2px;background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--ln) 31px 32px);line-height:32px;font-size:15px;font-family:inherit;outline:none;resize:vertical;min-height:256px}
+#ask.dzm{width:min(86vw,320px)}
+#ask.dzm h3{font-size:16px;font-weight:600;margin:0 0 4px}
+#ask.dzm p{color:var(--g1);font-size:13px;margin:0 0 16px}
+#ask.dzm .row{display:flex;justify-content:flex-end;align-items:center;gap:18px}
+#ask.dzm button{color:var(--g1);font-size:14px}
+#ask.dzm button.pri{background:var(--tl);color:#fff;padding:5px 20px;border-radius:3px;font-weight:600}
+@media(max-width:680px){
+  .dz{margin:0 -6px}
+}
+@media(min-width:900px){
+  .dz{--r:26px;--lc:52px;font-size:14px}
+  .dzbig{font-size:76px}
+  .dzmini{grid-template-columns:repeat(7,22px);font-size:10.5px!important;line-height:16px!important}
+  .dz .blk{font-size:11px}
+  .dzchip{font-size:11px;height:15px;line-height:15px;min-width:40px}
+  .dzcal .dzmore{width:40px;font-size:10.5px}
+  .dzcd .dn{font-size:24px}
+  .dzwh{font-size:22px}
+}
 </style>
 </head>
 <body>
@@ -830,6 +1011,10 @@ function normalize(d) {
     if (!hab) { hab = { id: uid(), name: '습관', col: 'sage', icon: '🌱' }; d.cats.push(hab); }
     for (const r of d.rules) if (r.title === '소금물 마시기' && !r.cat) { r.cat = hab.id; r.updatedAt = Date.now(); }
     d.v5 = true;
+  }
+  if (!d.v17cats) {
+    for (const [id, name, col, icon] of [['c_house', '집안일', 'sand', '🧺'], ['c_health', '건강', 'grape', '💊']]) if (!d.cats.some(c => c.name === name || c.id === id)) d.cats.push({ id, name, col, g: PAL[col][3], icon });
+    d.v17cats = true;
   }
   // 구글에서 불러온 일정 중 플래너가 보낸 일정의 복사본(📌·✓로 시작하거나, 같은 날 같은 제목의 고정 일정·일정이 있는 것)은 빼요
   {
@@ -1063,18 +1248,19 @@ function planBanner() {
 function timeGrid(from, to, blocks, o = {}) {
   const h0 = Math.floor(from / 60), h1 = Math.ceil(to / 60), nm = o.date === today() ? nowMin() : -1;
   let html = '';
+  if (o.hl) { let cl = [], end = -1; for (const x of [...blocks].sort((p, q) => p.a - q.a || q.b - p.b)) { if (x.a >= end) { cl = []; end = -1; } const used = cl.filter(y => y.b > x.a).map(y => y.ln); let k = 0; while (used.includes(k)) k++; x.ln = k; cl.push(x); end = Math.max(end, x.b); } }
   for (let h = h0; h < h1; h++) {
-    const base = h * 60, inRow = blocks.filter(x => x.a < base + 60 && x.b > base);
+    const base = h * 60, inRow = blocks.filter(x => x.a < base + 60 && x.b > base), nl = o.hl ? Math.max(0, ...inRow.map(y => y.ln || 0)) + 1 : 1;
     let cells = '';
     for (let k = 0; k < 6; k++) { const s = base + k * 10; cells += `<span class="cell${s <= nm && nm < s + 10 ? ' nowc' : ''}" style="grid-column:${k + 1}" data-slot="${s}"></span>`; }
     for (const x of inRow) {
       const c0 = Math.max(0, Math.floor((x.a - base) / 10)), c1 = Math.min(6, Math.ceil((Math.min(x.b, base + 60) - base) / 10)); if (c1 <= c0) continue;
       const first = x.a >= base;
-      cells += x.id ? `<button class="blk ${x.cls || ''}${first ? '' : ' cont'}" style="grid-column:${c0 + 1}/${c1 + 1};--c:${x.c};--f:${x.f}" data-a="open" data-id="${esc(x.id)}" title="${esc(x.label)}">${first ? esc(x.label) : ''}</button>`
+      cells += x.id ? `<button class="blk ${x.cls || ''}${first ? '' : ' cont'}${nl > 1 ? ' lane' + (nl > 2 ? ' n3' : '') : ''}" style="grid-column:${c0 + 1}/${c1 + 1};--c:${x.c};--f:${x.f}${o.hl ? `;--k:${x.ln || 0};--n:${nl}` : ''}" data-a="open" data-id="${esc(x.id)}" title="${esc(x.label)}">${first || o.hl ? esc(x.label) : ''}</button>`
         : `<span class="blk ${x.cls || ''}" style="grid-column:${c0 + 1}/${c1 + 1}"></span>`;
     }
     const lab = h % 24;
-    html += `<div class="tgr${o.nl ? ' nl' : ''}${nm >= base && nm < base + 60 ? ' nowr' : ''}">${o.nl ? '' : `<span class="h">${lab}</span>`}<div class="cells">${cells}</div></div>`;
+    html += `<div class="tgr${o.nl ? ' nl' : ''}${nm >= base && nm < base + 60 ? ' nowr' : ''}">${o.nl ? '' : `<span class="h">${o.hl ? String(lab).padStart(2, '0') : lab}</span>`}<div class="cells">${cells}</div></div>`;
   }
   return `<div class="tg${o.ro ? ' ro' : ''}" data-date="${esc(o.date || '')}">${html}</div>`;
 }
@@ -1096,79 +1282,7 @@ function miniCal() {
     + `<div class="mcg">${[...'일월화수목금토'].map(x => `<span class="w">${x}</span>`).join('')}${cells}</div>`
     + `<div class="mleg">적게<span style="background:#eef4e2"></span><span style="background:var(--p1)"></span><span style="background:var(--p2)"></span><span style="background:#9fd8ab"></span>많이<span class="grow" style="width:auto;height:auto"></span>${days}일 출근 · ${dur(tot)}</div>`;
 }
-function vHome() {
-  const t = today(), now = nowMin(), its = dayItems(t), w = openWork(), f = openFocus(), wm = workMins(t), fm = focusMins(t), bg = D.bigGoal, bp = bg.projectId && projOf(bg.projectId);
-  const head = `<div class="hhead"><div><div class="hsub">Daily Plan · ${t.slice(0, 4)} · Week ${isoWeek(t)}</div><div class="hdate">${+t.slice(5, 7)}월 ${+t.slice(8, 10)}일 ${DOW[wd(t)]}요일</div></div>`
-    + `<div class="hright"><div class="hclock" data-live="clock">${nowHM()}</div><div class="row"><small>기상 ${esc(wakeOf(t))} · 취침 ${esc(sleepOf(t))}</small><button class="mini" data-a="wakeNow">일어났어요</button><button class="mini" data-a="sleepNow">잘게요</button></div></div></div>`;
-  const goal = `<button class="goal" data-a="editGoal"><div class="grow"><div class="gl">큰 목표</div><div class="gt">${esc(bg.text || '큰 목표 하나를 적어 보세요')}</div><div class="gs">${bg.due ? esc(bg.due) + ' 까지' : ''}${bp ? `${bg.due ? ' · ' : ''}${esc(bp.title)} ${pct(projProgress(bp))}` : ''}${!bg.due && !bp ? '눌러서 고치기' : ''}</div></div>${bg.due ? `<span class="gd">${dday(bg.due)}</span>` : ''}</button>`;
-  // 작업실 (2열: 출퇴근 | 작은 달력)
-  const sess = workOf(t).map(s => `<div class="sess">출근 <input type="time" value="${esc(s.in)}" data-ws="${esc(s.id)}" data-f="in" aria-label="출근 시각"> 퇴근 ${s.out ? `<input type="time" value="${esc(s.out)}" data-ws="${esc(s.id)}" data-f="out" aria-label="퇴근 시각">` : '<b class="ok">작업 중</b>'}<button class="ic del" data-a="wsDel" data-id="${esc(s.id)}" aria-label="기록 삭제">${TRASH}</button></div>`).join('');
-  const studio = `<section class="card"><div class="studio"><div><div class="row sthd"><h3 class="grow" style="margin:0">작업실</h3>${w ? `<span class="chip on">작업 중 · ${esc(w.in)} 출근</span>` : '<span class="chip">퇴근 상태</span>'}</div>`
-    + `<div class="stat"><div><small>작업실</small><span class="big" data-live="work">${dur(wm)}</span></div><div><small>집중</small><span class="big" data-live="focusT">${dur(fm)}</span></div></div>`
-    + `<div class="row" style="margin:14px 0 4px">${w ? '<button class="bigbtn dk" data-a="checkOut">퇴근하기</button>' : '<button class="bigbtn pri" data-a="checkIn">작업실 출근</button>'}<button class="bigbtn" data-a="focus">${f ? '집중 끝' : '집중 시작'}</button></div>`
-    + `${sess ? `<h4>오늘 기록</h4>${sess}` : ''}</div><div>${miniCal()}</div></div></section>`;
-  // 지금
-  const timed = timedToday();
-  let ix = lcdIx; if (ix == null || ix >= timed.length) ix = lcdNow(timed);
-  const cur = timed[ix], label = cur ? (cur.a <= now && now < cur.b ? '지금' : cur.a > now ? '다음' : '지난 일정') : '';
-  const dayProg = Math.min(1, Math.max(0, (now - wakeMin(t)) / (sleepMin(t) - wakeMin(t))));
-  const nowCard = `<section class="card"><div class="row" style="margin-bottom:6px"><h3 class="grow" style="margin:0">지금</h3><button class="ic" data-a="lcd" data-n="-1" aria-label="이전 일정">${CHEV(-1)}</button><button class="ic" data-a="lcd" data-n="1" aria-label="다음 일정">${CHEV(1)}</button></div>`
-    + (f ? `<div class="nowl1">집중하는 중 · ${esc(f.start)} 시작</div><div class="nowt big" data-live="lcd">${tickTxt(f)}</div>`
-      : cur ? `<div class="nowl1">${label} · ${esc(timeTxt(cur.i))}</div><div class="nowt">${cur.i.done ? '✓ ' : ''}${esc(cur.i.title)}</div>`
-        : '<div class="nowl1">오늘 시간 정한 일정이 없어요</div><div class="nowt"></div>')
-    + `<div class="prog" title="하루 ${pct(dayProg)} 지남"><i style="width:${Math.round(dayProg * 100)}%"></i></div><small>기상부터 취침까지 하루의 ${pct(dayProg)}가 지났어요</small></section>`;
-  // 오늘 할 일
-  const list = its.filter(i => !i.g).map(i => `<div class="ck2${i.done ? ' done' : ''}"><button class="sq sm${i.done ? ' on' : ''}" data-a="tog" data-id="${esc(i.id)}" aria-pressed="${i.done}" aria-label="완료: ${esc(i.title)}"></button><span class="cbar" style="--c:${colorOf(i)}"></span><button class="t" data-a="open" data-id="${esc(i.id)}">${esc(i.title)}</button><small>${esc(i.time || '')}</small></div>`).join('') || '<div class="empty">오늘 일정이 없어요.</div>';
-  const todo = `<section class="card"><div class="row" style="margin-bottom:4px"><h3 class="grow" style="margin:0">오늘 할 일 <small>${its.filter(i => i.done).length}/${its.length}</small></h3><button class="ic tx" data-a="tab" data-t="today">전체 보기</button></div>${list}</section>`;
-  // 집중 시간표 (10분 칸)
-  const blocks = [...workOf(t).map(s => { const [a, b] = sessFrame(t, s.in, s.out || nowHM()); return { a, b, cls: 'pres' }; }), ...focusOf(t).map(s => { const [a, b] = sessFrame(t, s.start, s.end || nowHM()); return { a, b, cls: 'foc' }; })];
-  const from = Math.min(wakeMin(t), ...blocks.map(x => x.a)), to = Math.max(sleepMin(t), ...blocks.map(x => x.b));
-  const grid = `<section class="card"><div class="row"><h3 class="grow" style="margin:0">집중 시간표</h3><small>한 칸 = 10분</small></div><div class="big" data-live="focusBig" style="margin:8px 0 6px">${dur(fm)}</div><div style="margin-bottom:10px"><span class="lgd"><i style="background:#eef5e4"></i>작업실에 있던 시간</span><span class="lgd"><i style="background:var(--p2);box-shadow:inset 3px 0 0 #86d093"></i>집중한 시간</span></div>${blocks.length ? '' : '<p class="mu" style="margin:0 0 10px">출근하고 집중 시작을 누르면 칸이 채워져요.</p>'}${timeGrid(from, to, blocks, { date: t, ro: true })}</section>`;
-  const chart = `<section class="card"><div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">일한 시간</h3><span class="seg">${[[7, '7일'], [30, '30일'], [84, '12주']].map(([n, l]) => `<button class="${chartRange === n ? 'on' : ''}" data-a="range" data-n="${n}">${l}</button>`).join('')}</span></div>${vChart()}</section>`;
-  return head + planBanner() + goal + studio + `<div class="hgrid"><div>${nowCard}${todo}</div><div>${grid}</div></div>` + chart;
-}
-function vChart() {
-  const t = today(), weekly = chartRange === 84;
-  let rows;
-  if (weekly) rows = Array.from({ length: 12 }, (_, k) => { const m = addD(mon(t), -7 * (11 - k)); let w = 0, f = 0; for (let i = 0; i < 7; i++) { const d = addD(m, i); if (d > t) break; w += workMins(d); f += focusMins(d); } return { key: m, label: md(m), w, f }; });
-  else rows = Array.from({ length: chartRange }, (_, k) => { const d = addD(t, -(chartRange - 1 - k)); return { key: d, label: chartRange === 7 ? DOW[wd(d)] : String(+d.slice(8)), w: workMins(d), f: focusMins(d) }; });
-  const max = Math.max(60, ...rows.map(r => r.w), ...rows.map(r => r.f)), mob = isMobile(), H = mob ? 190 : 170, W = mob ? 340 : 640, L = 30, B = 22, bw = (W - L - 8) / rows.length;
-  const step = [60, 120, 180, 240, 300, 600, 1200, 2400, 3000].find(v => max / v <= 5) || 6000, ticks = [];
-  for (let v = 0; v <= max; v += step) ticks.push(v);
-  const y = v => H - B - (v / max) * (H - B - 10), sw = rows.reduce((s, r) => s + r.w, 0), sf = rows.reduce((s, r) => s + r.f, 0);
-  let svg = ticks.map(v => `<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="#ececf0"/><text x="${L - 5}" y="${y(v) + 4}" font-size="10" text-anchor="end" fill="#8e8e93">${v / 60}h</text>`).join('');
-  rows.forEach((r, k) => {
-    const x = L + 4 + k * bw, gap = Math.max(1, bw * .05), w1 = Math.max(2, bw * .3), w2 = w1, x1 = x + (bw - w1 - w2 - gap) / 2, x2 = x1 + w1 + gap, on = chartSel === r.key;
-    svg += `<g data-a="chartSel" data-d="${r.key}" style="cursor:pointer"><rect x="${x}" y="0" width="${bw}" height="${H}" fill="${on ? 'rgba(87,198,163,.09)' : 'transparent'}"/><rect x="${x1}" y="${y(r.w)}" width="${w1}" height="${H - B - y(r.w)}" rx="2" fill="#CFE9C3"><title>${esc(r.label)} 작업실 ${dur(r.w)}</title></rect><rect x="${x2}" y="${y(r.f)}" width="${w2}" height="${H - B - y(r.f)}" rx="2" fill="#8ed39a"><title>${esc(r.label)} 집중 ${dur(r.f)}</title></rect>`
-      + (rows.length <= 14 || k % (mob ? 7 : 5) === 0 || k === rows.length - 1 ? `<text x="${x + bw / 2}" y="${H - 6}" font-size="10" text-anchor="middle" fill="#8e8e93">${esc(r.label)}</text>` : '') + '</g>';
-  });
-  const n = rows.length;
-  let detail = '';
-  if (chartSel && !weekly) {
-    const d = chartSel, ss = workOf(d), fs = focusOf(d);
-    detail = `<h4>${esc(mdw(d))} 기록 고치기</h4>${ss.map(s => `<div class="sess">작업실 <input type="time" value="${esc(s.in)}" data-ws="${esc(s.id)}" data-f="in" aria-label="출근"> ~ <input type="time" value="${esc(s.out)}" data-ws="${esc(s.id)}" data-f="out" aria-label="퇴근"><small>${s.out ? dur(spanMin(s.in, s.out)) : '진행 중'}</small><button class="ic del" data-a="wsDel" data-id="${esc(s.id)}" aria-label="삭제">${TRASH}</button></div>`).join('')}${fs.map(s => `<div class="sess">집중 <input type="time" value="${esc(s.start)}" data-fs="${esc(s.id)}" data-f="start" aria-label="집중 시작"> ~ <input type="time" value="${esc(s.end)}" data-fs="${esc(s.id)}" data-f="end" aria-label="집중 끝"><small>${s.end ? dur(spanMin(s.start, s.end)) : '진행 중'}</small><button class="ic del" data-a="fsDel" data-id="${esc(s.id)}" aria-label="삭제">${TRASH}</button></div>`).join('')}<div class="row"><button data-a="wsAdd" data-d="${d}">＋ 작업실 기록</button><button data-a="fsAdd" data-d="${d}">＋ 집중 기록</button></div>`;
-  }
-  const empty = !sw && !sf ? `<text x="${(W + L) / 2}" y="${H / 2 - 10}" font-size="13" text-anchor="middle" fill="#8e8e93">${mob ? '아직 기록이 없어요' : '아직 기록이 없어요. 출근·집중 버튼을 누르면 여기에 쌓여요'}</text>` : '';
-  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="일한 시간 그래프">${svg}${empty}</svg></div><div class="row" style="margin-top:6px"><span class="lgd"><i style="background:#CFE9C3"></i>작업실</span><span class="lgd"><i style="background:#8ed39a"></i>집중</span><small class="grow" style="text-align:right">합계 작업실 ${dur(sw)} · 집중 ${dur(sf)} · ${weekly ? '주' : '하루'} 평균 ${dur(Math.round(sw / n))}</small></div><small>${weekly ? '' : '막대를 누르면 그날 기록을 고치거나 빠진 기록을 넣을 수 있어요.'}</small>${detail}`;
-}
-
 /* ================= 7. 달력 ================= */
-function vCal() {
-  const [y, m] = cm.split('-').map(Number), off = new Date(y, m - 1, 1).getDay(), n = new Date(y, m, 0).getDate(), t = today(), mob = isMobile(), MAXC = mob ? 3 : 4;
-  let c = '<div class="cd pad"></div>'.repeat(off);
-  for (let d = 1; d <= n; d++) {
-    const s = `${cm}-${String(d).padStart(2, '0')}`, its = dayItems(s).filter(visibleCat).filter(i => !i.fixed || (D.set.showFixed && by(D.rules, i.rule)?.onCal)).sort((a, b) => (a.fixed ? 1 : 0) - (b.fixed ? 1 : 0) || sortItems(a, b)), hb = D.habits.some(h => hDone(s, h));
-    const chips = its.slice(0, MAXC).map(i => `<div class="ce${i.done ? ' done' : ''}${i.g ? ' g' : ''}" style="--c:${colorOf(i)};--f:${fillOf(i)}"><button class="cbx${i.done ? ' on' : ''}" data-a="tog" data-id="${esc(i.id)}" aria-pressed="${i.done}" aria-label="완료 표시: ${esc(i.title)}" title="완료 체크"></button><button class="cet" data-a="open" data-id="${esc(i.id)}" title="${esc((i.time ? i.time + ' ' : '') + i.title)}">${!mob && i.time ? `<span class="ctm">${esc(i.time)}</span> ` : ''}${esc(i.title)}</button></div>`).join('');
-    c += `<div class="cd${s === sel ? ' sel' : ''}${s === t ? ' td' : ''}${wd(s) === 0 ? ' sun' : ''}" data-a="sel" data-d="${s}" role="button" tabindex="0" aria-label="${m}월 ${d}일${its.length ? ', ' + esc(its.map(i => i.title).join(', ')) : ''}"><span class="dn">${d}</span>${chips}${its.length > MAXC ? `<span class="cmore">+${its.length - MAXC}개</span>` : ''}${hb ? '<span class="hbd" title="습관 기록 있음"></span>' : ''}</div>`;
-  }
-  c += '<div class="cd pad"></div>'.repeat((7 - (off + n) % 7) % 7);
-  const legend = D.cats.map(k => `<button class="lg${D.set.hiddenCats.includes(k.id) ? ' off' : ''}" style="--c:${catDot(k)}" data-a="catVis" data-id="${esc(k.id)}" aria-pressed="${!D.set.hiddenCats.includes(k.id)}" title="눌러서 달력에서 숨기기·보이기"><i></i>${esc(k.name)}</button>`).join('') + `<button class="lg${D.set.showFixed ? '' : ' off'}" style="--c:#c7c7cc" data-a="fixVis" aria-pressed="${D.set.showFixed}"><i></i>고정 일정</button>`;
-  const its = dayItems(sel);
-  return planBanner() + `<div class="card"><div class="row"><button class="ic" data-a="cm" data-n="-1" aria-label="이전 달">${CHEV(-1)}</button><h2 style="margin:0">${y}년 ${m}월</h2><button class="ic" data-a="cm" data-n="1" aria-label="다음 달">${CHEV(1)}</button><button class="mini" data-a="cmToday">오늘</button><span class="grow"></span><button class="pri" data-a="newItem" data-d="${sel}">＋ 일정</button></div><div class="calh" style="margin-top:12px">${[...'일월화수목금토'].map(d => `<div class="dh">${d}</div>`).join('')}</div><div class="cal">${c}</div><div class="legend">${legend}</div><p class="mu" style="margin:0;font-size:12.5px">일정 앞 네모를 누르면 바로 완료로 체크돼요. 매일 하는 고정 일정은 달력 칸에서 빼고 아래 날짜 카드에만 보여요.</p></div>`
-    + `<div class="card"><div class="row"><h3 class="grow" style="margin:0">${sel.slice(0, 4)}년 ${kd(sel)}</h3>${sel === t ? '<span class="chip on">오늘</span>' : `<small>${dday(sel)}</small>`}</div><div style="margin-top:6px">${its.map(i => itemRow(i, { fwd: true })).join('') || '<div class="empty">이 날은 비어 있어요.</div>'}</div>${addForm(sel, 'cal')}`
-    + (D.habits.length ? `<h4>습관</h4>${D.habits.map(h => `<div class="ck2${hDone(sel, h) ? ' done' : ''}"><button class="sq sm${hDone(sel, h) ? ' on' : ''}" data-a="habit" data-id="${esc(h.id)}" data-d="${sel}" aria-pressed="${hDone(sel, h)}" aria-label="${esc(h.name)}"${sel > t ? ' disabled' : ''}></button><span class="t">${esc(h.name)}</span></div>`).join('')}` : '') + '</div>';
-}
-
 /* ================= 8. 오늘 (10분 칸 시간표 + 분류별 목록) ================= */
 const PEN = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 20l4.2-1 10.3-10.3a2 2 0 0 0 0-2.8l-.4-.4a2 2 0 0 0-2.8 0L5 15.8 4 20zM13.8 6.9l3.3 3.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const XX = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
@@ -1209,28 +1323,198 @@ function afSubmit(f) {
   focusKey = 'af:' + key; save(); autoSync(x);
 }
 const relDay = (d, t0 = today()) => { const n = diffD(t0, d); return n === 0 ? '오늘' : n === -1 ? '어제' : n === 1 ? '내일' : n === -2 ? '그저께' : n === 2 ? '모레' : n < 0 ? `${-n}일 전` : `${n}일 뒤`; };
+/* ================= 다이어리 디자인 (v17): 홈 · 달력 · 오늘 ================= */
+const isHabitCat = id => !!id && (catOf(id)?.name || '') === '습관';
+const isHabitItem = i => isHabitCat(i.cat);
+const p2 = n => String(n).padStart(2, '0');
+const first3 = s => { let n = 0, o = ''; for (const ch of String(s || '').trim()) { if (n >= 3) break; o += ch; if (ch.trim()) n++; } return o; };
+const tspan = i => i.time ? esc(i.time) + (i.end ? ' - ' + esc(i.end) : '') : '';
+// 손으로 그은 듯한 체크 (네모를 살짝 넘어가요)
+const CHK = '<svg class="ckm" viewBox="0 0 20 22" aria-hidden="true"><path d="M3.4 12.6c1.6 1.3 2.7 3 3.5 5.3C9.5 11.3 12.9 6.4 17.6 2.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const dzBox = (i, extra = '') => `<button class="dzc${i.done ? ' on' : ''}" data-a="tog" data-id="${esc(i.id)}"${extra} aria-pressed="${!!i.done}" aria-label="완료: ${esc(i.title)}">${i.done ? CHK : ''}</button>`;
+const dzRow = (label, content, cls = '') => `<div class="dzr${cls ? ' ' + cls : ''}"><span class="dzl">${label || ''}</span><div class="dzv">${content}</div></div>`;
+function dzShow(m) { m.classList.add('dzm'); m.addEventListener('close', () => m.classList.remove('dzm'), { once: true }); m.returnValue = ''; if (!m.open) m.showModal(); }
+async function dzAsk(t, b, btns) { const a = $('#ask'); a.classList.add('dzm'); const r = await ask(t, b, btns); a.classList.remove('dzm'); return r; }
+
+// 맨 위: 2026 · 큰 숫자 · 작은 달력
+function dzMini(t) {
+  const y = +t.slice(0, 4), m = +t.slice(5, 7), off = new Date(y, m - 1, 1).getDay(), n = new Date(y, m, 0).getDate();
+  let c = [...'SMTWTFS'].map(x => `<span class="w">${x}</span>`).join('') + '<span></span>'.repeat(off);
+  for (let d = 1; d <= n; d++) c += `<span${`${t.slice(0, 7)}-${p2(d)}` === t ? ' class="b"' : ''}>${d}</span>`;
+  return `<button class="dzmini" data-a="goCal" data-m="${t.slice(0, 7)}" aria-label="${m}월 달력 보기">${c}</button>`;
+}
+function dzHead(kind, t) {
+  const T0 = today(), m = +t.slice(5, 7), d = +t.slice(8, 10);
+  let nav = '';
+  if (kind === 'today') nav = `<span class="dznav"><button data-a="tdGo" data-n="-1" aria-label="하루 전">‹</button><button data-a="tdGo" data-n="1" aria-label="하루 뒤">›</button></span>${t !== T0 ? `<small class="dzrel">${esc(relDay(t, T0))}</small><button class="dzu dzback" data-a="tdGo" data-n="0">오늘로</button>` : ''}`;
+  if (kind === 'cal') nav = `<span class="dznav"><button data-a="cm" data-n="-1" aria-label="이전 달">‹</button><button data-a="cm" data-n="1" aria-label="다음 달">›</button></span>${t.slice(0, 7) !== T0.slice(0, 7) ? '<button class="dzu dzback" data-a="cmToday">이번 달</button>' : ''}`;
+  return `<div class="dzh"><div class="dzyc"><b class="dzy">${t.slice(0, 4)}</b>${nav}</div><div class="dzbig${kind === 'today' ? ' dzstk' : ''}">${kind === 'today' ? `<span>${m}</span><span>${d}</span>` : `<span>${m}</span>`}</div>${kind === 'cal' ? '' : `<div class="dzmc">${dzMini(kind === 'today' ? t : T0)}</div>`}</div>`;
+}
+
+/* ---------- 홈 ---------- */
+function vHome() {
+  const t = today(), now = nowMin(), dy = D.days[t] || {}, ow = openWork(), ss = workOf(t), f = openFocus();
+  const tb = (v, a) => `<button class="dzt" ${a}>${esc(v)}</button>`, ph = v => `<span class="dzt mu">${esc(v)}</span>`;
+  // 기상 · 취침 / 출근 · 퇴근: 밑줄 = 아직 안 누른 것. 누르면 밑줄이 없어지고 시각이 들어가요. 들어간 시각을 누르면 고쳐요.
+  const wake = dy.wake ? `<span class="dzk">기상</span>${tb(dy.wake, `data-a="dayEdit" data-d="${t}" data-f="wake" aria-label="기상 시각 고치기"`)}` : `<button class="dzu" data-a="wakeNow">기상</button>${ph(wakeOf(t))}`;
+  const sleep = dy.sleep ? `<span class="dzk">취침</span>${tb(dy.sleep, `data-a="dayEdit" data-d="${t}" data-f="sleep" aria-label="취침 시각 고치기"`)}` : `<button class="dzu" data-a="sleepNow">취침</button>${ph(sleepOf(t))}`;
+  const s0 = ss[0], lastOut = [...ss].reverse().find(s => s.out);
+  const cin = (ow ? '<span class="dzk">출근</span>' : `<button class="${s0 ? 'dzk' : 'dzu'}" data-a="checkIn"${s0 ? ' title="다시 출근"' : ''}>출근</button>`) + (ow || s0 ? tb((ow || s0).in, `data-a="wsEdit" data-id="${esc((ow || s0).id)}" data-f="in" aria-label="출근 시각 고치기"`) : ph('--:--'));
+  const cout = ow ? `<button class="dzu" data-a="checkOut">퇴근</button>${ph('--:--')}` : `<span class="dzk">퇴근</span>${lastOut ? tb(lastOut.out, `data-a="wsEdit" data-id="${esc(lastOut.id)}" data-f="out" aria-label="퇴근 시각 고치기"`) : ph('--:--')}`;
+  const pb = planBanner();
+  let h = dzHead('home', t) + (pb ? `<div class="dzplan">${pb}</div>` : '')
+    + `<section class="dzs dzlogs">${dzRow('', `<span class="c1"></span><span class="c2 dzlog">${wake}<i class="dzdot">·</i>${sleep}</span>`)}${dzRow('', `<span class="c1"></span><span class="c2 dzlog">${cin}<i class="dzdot">·</i>${cout}</span>`)}</section>`;
+  // 큰 목표 → 프로젝트
+  const bg = D.bigGoal, bp = bg.projectId && projOf(bg.projectId);
+  const det = [bg.due ? esc(bg.due) + ' 까지' : '', bp ? `${esc(bp.title)} ${pct(projProgress(bp) || 0)}` : ''].filter(Boolean).join(' · ');
+  h += `<section class="dzs">${dzRow('큰 목표', `<button class="dzgo" data-a="goGoal"><b class="c1 dzb">${esc(bg.text || '큰 목표를 적어 보세요')}</b><span class="c2 dzdd">${bg.due ? esc(dday(bg.due)) : ''}</span></button><button class="dzu dzsm" data-a="editGoal">고치기</button>`)}`
+    + dzRow('', `<button class="dzgo" data-a="goGoal"><span class="c1"></span><small class="c2">${det}</small></button>`) + '</section>';
+  // 지금 → 오늘 (진행 막대 + 남은 시간)
+  const timed = dayItems(t).filter(i => i.time && !isHabitItem(i)).map(i => ({ i, a: itemStart(i), b: itemEnd(i) })).sort((x, y) => x.a - y.a);
+  const cur = timed.find(x => x.a <= now && now < x.b), z = cur || timed.find(x => x.a > now);
+  const p = cur ? (now - cur.a) / (cur.b - cur.a) : 0;
+  h += `<section class="dzs dznow">${dzRow('지금', z ? `<button class="dzgo" data-a="tab" data-t="today"><b class="c1 dzb">${cur ? '' : '<span class="dznext">다음</span>'}${esc(z.i.title)}</b><span class="c2"><span class="dzbar" data-live="nowbar" data-ab="${z.a},${z.b}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span></span></button>` : '<button class="dzgo" data-a="tab" data-t="today"><span class="c1 mu">지금 할 일 없음</span><small class="c2 mu">오늘에서 일정 넣기</small></button>')}`
+    + dzRow('', z ? `<button class="dzgo" data-a="tab" data-t="today"><small class="c1 dznum">${tspan(z.i)}</small><small class="c2 dzleft" data-live="nowleft" data-ab="${z.a},${z.b}" data-cur="${cur ? 1 : 0}">${cur ? `${dur(cur.b - now)} 남음` : `${dur(z.a - now)} 뒤 시작`}</small></button>` : '') + '</section>';
+  // 할 일 (습관 분류는 오늘 화면의 습관에서)
+  const list = dayItems(t).filter(i => !isHabitItem(i));
+  h += '<section class="dzs dztodo">' + (list.length ? list.map((i, k) => dzRow(k ? '' : '할 일', `<button class="dzgo${i.done ? ' done' : ''}" data-a="tab" data-t="today"><span class="c1 dztt">${esc(i.title)}</span><span class="c2 dznum">${tspan(i)}</span></button>${dzBox(i)}`)).join('')
+    : dzRow('할 일', '<button class="dzgo" data-a="tab" data-t="today"><span class="c1 mu">오늘 할 일이 없어요</span><small class="c2 mu">오늘에서 넣기</small></button>')) + '</section>';
+  // 집중: 집중 시작! → 시간 재기 · 그래프(작업실 출퇴근 · 집중)
+  const tot = chartRows().reduce((s, r) => s + r.w, 0);
+  h += `<section class="dzs dzfocus">${dzRow('집중', `<small class="dzsum">노동 시간 합계: <span class="dznum">${dur(tot)}</span></small><span class="dzfr">${f ? '<button class="dzu on" data-a="focus">집중 끝</button>' : '<button class="dzu" data-a="focus">집중 시작!</button>'}<span class="dzt dznum${f ? ' run' : ' mu'}" data-live="ftimer">${f ? focusClock(f) : '00:00'}</span></span>`)}`
+    + `<div class="dzr dzchartr"><span class="dzl"></span><div class="dzv">${dzChart()}</div></div>`
+    + dzRow('', `<span class="dzrange">${[[7, '7일'], [30, '30일'], [84, '12주']].map(([n, l]) => `<button class="${chartRange === n ? 'on' : ''}" data-a="range" data-n="${n}" aria-pressed="${chartRange === n}">${l}</button>`).join('')}</span><span class="dzlg"><i class="w"></i>작업실<i class="f"></i>집중</span>`) + '</section>';
+  return `<div class="dz dz-home">${h}</div>`;
+}
+const focusClock = f => { const s0 = Math.round((Date.now() - new Date(`${f.date}T${f.start}`).getTime()) / 1000), x = s0 < 0 ? s0 + 86400 : s0; const hh = Math.floor(x / 3600), mm = Math.floor(x % 3600 / 60), ss = x % 60; return hh ? `${hh}:${p2(mm)}:${p2(ss)}` : `${p2(mm)}:${p2(ss)}`; };
+function chartRows() {
+  const t = today();
+  if (chartRange === 84) return Array.from({ length: 12 }, (_, k) => { const m = addD(mon(t), -7 * (11 - k)); let w = 0, f = 0; for (let i = 0; i < 7; i++) { const d = addD(m, i); if (d > t) break; w += workMins(d); f += focusMins(d); } return { key: m, label: `${+m.slice(5, 7)}/${+m.slice(8)}`, w, f, wk: 1 }; });
+  return Array.from({ length: chartRange }, (_, k) => { const d = addD(t, -(chartRange - 1 - k)); return { key: d, label: chartRange === 7 ? DOW[wd(d)] : String(+d.slice(8)), w: workMins(d), f: focusMins(d) }; });
+}
+function dzChart() {
+  const rows = chartRows(), n = rows.length, H = 124, L = 24, B = 20, top = 6;
+  // 화면 폭에 맞춰 그려요 (글자 크기가 늘어나지 않게)
+  const v = $('#v'), cs = v && getComputedStyle(v), cw = v ? v.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) : 362, mob = matchMedia('(max-width:680px)').matches;
+  const W = Math.round(Math.max(260, Math.min(720, cw + (mob ? 12 : 0)) - (mob ? 60 : 68)));
+  const mx = Math.max(...rows.map(r => Math.max(r.w, r.f))) / 60, maxH = mx <= 8 ? 8 : mx <= 12 ? 12 : Math.ceil(mx / 4) * 4, st = maxH > 12 ? 4 : 2;
+  const y = v => top + (1 - v / (maxH * 60)) * (H - B - top);
+  let s = '';
+  for (let v = 0; v <= maxH; v += st) s += `<text x="${L - 8}" y="${y(v * 60) + 3.5}" text-anchor="end" class="dzax">${v}h</text>`;
+  const bw = (W - L) / n;
+  rows.forEach((r, k) => {
+    const x = L + k * bw, w1 = Math.min(7, Math.max(2, bw * .24)), gap = Math.max(1, Math.min(3, w1 * .4)), x1 = x + (bw - 2 * w1 - gap) / 2, x2 = x1 + w1 + gap;
+    const lab = n <= 14 || k % 5 === 4 || k === n - 1;
+    s += `<g class="dzbr"${r.wk ? '' : ` data-a="sessEdit" data-d="${r.key}" role="button" tabindex="0" aria-label="${esc(mdw(r.key))} 기록 고치기"`}><rect x="${x}" y="0" width="${bw}" height="${H}" fill="transparent"/>`
+      + (r.w ? `<rect x="${x1}" y="${y(r.w)}" width="${w1}" height="${y(0) - y(r.w)}" class="w"><title>${esc(r.label)} 작업실 ${dur(r.w)}</title></rect>` : '')
+      + (r.f ? `<rect x="${x2}" y="${y(r.f)}" width="${w1}" height="${y(0) - y(r.f)}" class="f"><title>${esc(r.label)} 집중 ${dur(r.f)}</title></rect>` : '')
+      + (lab ? `<text x="${x + bw / 2}" y="${H - 4}" text-anchor="middle" class="dzax">${esc(r.label)}</text>` : '') + '</g>';
+  });
+  return `<svg class="dzchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="작업실·집중 시간 그래프 (막대를 누르면 그날 기록을 고쳐요)">${s}</svg>`;
+}
+let sessD = null;
+function openSess(d) {
+  sessD = d; const m = $('#m'), ss = workOf(d), fs = focusOf(d);
+  const tin = (v, a, l) => `<input type="time" class="dztin" value="${esc(v)}" ${a} aria-label="${l}">`;
+  m.innerHTML = `<form method="dialog" class="dzq"><div class="dzqh"><span class="dzqd">${esc(kd(d))}</span><b>작업실 · 집중 기록</b></div><div class="dzs">`
+    + ss.map(s => dzRow('작업실', `${tin(s.in, `data-ws="${esc(s.id)}" data-f="in"`, '출근')}<span class="dzdash">-</span>${tin(s.out, `data-ws="${esc(s.id)}" data-f="out"`, '퇴근')}<small class="grow mu">${s.out ? dur(spanMin(s.in, s.out)) : '작업 중'}</small><button type="button" class="dzx" data-a="wsDel" data-id="${esc(s.id)}" aria-label="작업실 기록 지우기">${XX}</button>`)).join('')
+    + fs.map(s => dzRow('집중', `${tin(s.start, `data-fs="${esc(s.id)}" data-f="start"`, '집중 시작')}<span class="dzdash">-</span>${tin(s.end, `data-fs="${esc(s.id)}" data-f="end"`, '집중 끝')}<small class="grow mu">${s.end ? dur(spanMin(s.start, s.end)) : '집중 중'}</small><button type="button" class="dzx" data-a="fsDel" data-id="${esc(s.id)}" aria-label="집중 기록 지우기">${XX}</button>`)).join('')
+    + (ss.length || fs.length ? '' : dzRow('', '<span class="mu">이 날은 기록이 없어요</span>'))
+    + `</div><div class="dzqf"><button type="button" class="dzu" data-a="wsAdd" data-d="${d}">+ 작업실</button><button type="button" class="dzu" data-a="fsAdd" data-d="${d}">+ 집중</button><span class="grow"></span><button value="ok" class="dzsave">닫기</button></div></form>`;
+  m.onclose = () => { sessD = null; }; dzShow(m);
+}
+// 기록된 시각 고치기 (기상·취침 / 출근·퇴근)
+function openTimeEdit(title, v, onSave, canClear = true) {
+  const m = $('#m');
+  m.innerHTML = `<form method="dialog" class="dzq"><div class="dzqh"><b>${esc(title)}</b></div><div class="dzs">${dzRow('시각', TP('name="v"', v || '', { lab: title, cls: 'dztp' }))}</div><div class="dzqf">${canClear ? '<button type="button" class="dzu" data-a="timeClear">기록 지우기</button>' : ''}<span class="grow"></span><button value="no" class="dzlink" formnovalidate>취소</button><button value="ok" class="dzsave">저장</button></div></form>`;
+  m.onclose = () => { const r = m.returnValue; if (r === 'ok') { const x = m.querySelector('input[name=v]').value; if (x) onSave(x); } else if (r === 'clear') onSave(''); };
+  dzShow(m);
+}
+
+/* ---------- 달력 ---------- */
+function vCal() {
+  const [y, m] = cm.split('-').map(Number), off = new Date(y, m - 1, 1).getDay(), n = new Date(y, m, 0).getDate(), T0 = today();
+  const cells = [...Array(off).fill(''), ...Array.from({ length: n }, (_, k) => `${cm}-${p2(k + 1)}`)];
+  while (cells.length % 7) cells.push('');
+  let weeks = '';
+  for (let w = 0; w < cells.length; w += 7) {
+    weeks += '<div class="dzwk">';
+    for (let k = 0; k < 7; k++) {
+      const s = cells[w + k];
+      if (!s) { weeks += '<span class="dzcd"></span>'; continue; }
+      const its = dayItems(s).filter(i => !isHabitItem(i) && (!i.fixed || by(D.rules, i.rule)?.onCal)).sort((a, b) => (a.time ? 0 : 1) - (b.time ? 0 : 1) || (a.time || '').localeCompare(b.time || ''));
+      weeks += `<button class="dzcd${k === 0 ? ' sun' : ''}${s === T0 ? ' td' : ''}" data-a="dayGo" data-d="${s}" aria-label="${esc(kd(s))}${its.length ? ', ' + esc(its.map(i => i.title).join(', ')) : ''}"><span class="dn">${+s.slice(8)}</span><span class="dzchips">`
+        + its.slice(0, 3).map(i => `<span class="dzchip${i.done ? ' done' : ''}" style="--f:${fillOf(i)}">${esc(first3(i.title))}</span>`).join('')
+        + (its.length > 3 ? `<span class="dzmore">+${its.length - 3}개</span>` : '') + '</span></button>';
+    }
+    weeks += '</div>';
+  }
+  const ms = `${cm}-01`, me = `${cm}-${p2(n)}`;
+  const ps = D.projects.filter(p => p.status === '진행 중' && (!p.due || p.due >= ms) && (!p.start || p.start <= me));
+  const pr = (k, v) => `<div class="dzr nol"><span class="dzl"></span><div class="dzv"><b class="c1 dzb">${k ? '' : '진행중인 프로젝트'}</b>${v}</div></div>`;
+  const pl = ps.length ? ps.slice(0, 3).map((p, k) => pr(k, `<button class="c2 dzpv" data-a="proj" data-id="${esc(p.id)}"><i>*</i>${esc(p.title)}</button>`)).join('') + (ps.length > 3 ? pr(1, `<button class="c2 dzpv dzmore" data-a="goProj">+${ps.length - 3}개</button>`) : '')
+    : pr(0, '<button class="c2 dzpv mu" data-a="goProj">이번 달 진행 중인 프로젝트가 없어요</button>');
+  return `<div class="dz dz-cal">${dzHead('cal', ms)}<div class="dzcal"><div class="dzwh">${[...'SMTWTFS'].map((x, k) => `<span class="${k === 0 ? 'sun' : k === 6 ? 'sat' : ''}">${x}</span>`).join('')}</div>${weeks}</div><section class="dzs dzproj">${pl}</section></div>`;
+}
+
+/* ---------- 오늘 ---------- */
 function vToday() {
   const T0 = today(); if (!tdv) tdv = T0;
-  const t = tdv, isT = t === T0, past = t < T0, rel = relDay(t, T0), near = Math.abs(diffD(T0, t)) <= 2, dn = near ? rel : mdw(t), its = dayItems(t), F = frameItems(t), od = isT ? overdue() : [];
-  const blocks = F.list.map(({ i, a, b }) => ({ a, b, c: colorOf(i), f: fillOf(i), label: i.title, id: i.id, cls: i.done ? 'done' : '' }));
-  const from = Math.min(F.w, ...F.list.map(x => x.a)), to = Math.max(F.s, ...F.list.map(x => x.b));
-  const groups = [...D.cats.map(c => ({ id: c.id, name: c.name, c: catDot(c) })), { id: '', name: '분류 없음', c: PAL.gray[2] }]
-    .map(g => ({ ...g, its: its.filter(i => (i.cat && catOf(i.cat) ? i.cat : '') === g.id) })).filter(g => g.its.length);
-  const gi = i => `<div class="gi${i.done ? ' done' : ''}"><button class="sq${i.done ? ' on' : ''}" data-a="tog" data-id="${esc(i.id)}" aria-pressed="${i.done}" aria-label="완료: ${esc(i.title)}"></button><button class="tx" data-a="open" data-id="${esc(i.id)}"><span class="t">${esc(i.title)}${i.fixed ? ' <span class="fx">고정</span>' : ''}</span><span class="tlink">${i.time ? esc(i.time + (i.end ? ' - ' + i.end : '')) : '시간 미정'}</span></button><button class="ic hide-m" data-a="open" data-id="${esc(i.id)}" aria-label="고치기: ${esc(i.title)}">${PEN}</button>${i.g ? '' : `<button class="ic del" data-a="del" data-id="${esc(i.id)}" aria-label="${i.fixed ? '이 날만 빼기' : '삭제'}: ${esc(i.title)}">${XX}</button>`}</div>`;
-  const right = groups.map(g => `<div class="grp" style="--c:${g.c}"><div class="gh"><i></i>${esc(g.name)}</div>${g.its.map(gi).join('')}</div>`).join('') || `<div class="empty">${isT ? '오늘' : near ? rel : '이 날은'} 일정이 없어요. 아래에서 넣거나, 시간표 칸을 끌어서 채워 보세요.</div>`;
-  const mission = String(D.mission || '').split('\n').find(s => s.trim());
-  const wk = mon(t) === mon(T0) ? '이번 주' : '그 주';
-  const habits = D.habits.map(x => { const on = hDone(t, x), c = hWeek(x, mon(t)); return `<div class="ck2${on ? ' done' : ''}"><button class="sq sm${on ? ' on' : ''}" data-a="habit" data-id="${esc(x.id)}" data-d="${t}" aria-pressed="${on}" aria-label="${esc(x.name)}"${t > T0 ? ' disabled' : ''}></button><span class="t">${esc(x.name)}</span><small>${wk} ${c}/${x.perWeek || 7}</small></div>`; }).join('') || '<div class="empty">습관 탭에서 습관을 추가하세요.</div>';
-  const head = `<div class="card tdhead"><div class="tdtop"><span class="tdpick"><h2>${kd(t)}</h2><input type="date" class="tdpk" data-tdgo="1" value="${t}" aria-label="날짜 골라서 가기" title="눌러서 날짜 고르기"></span>`
-    + `<span class="tdnav"><button class="ic" data-a="tdGo" data-n="-1" aria-label="하루 전 (${esc(relDay(addD(t, -1), T0))})" title="하루 전">${CHEV(-1)}</button><button class="mini" data-a="tdGo" data-n="0"${isT ? ' disabled' : ''}>오늘</button><button class="ic" data-a="tdGo" data-n="1" aria-label="하루 뒤 (${esc(relDay(addD(t, 1), T0))})" title="하루 뒤">${CHEV(1)}</button></span></div>`
-    + `<small class="tdsub">${isT ? '' : `<b class="tdrel">${esc(rel)}</b> · `}${t.slice(0, 4)}년 · ${its.length}개 중 ${its.filter(i => i.done).length}개 완료${mission ? ' · ' + esc(mission) : ''}</small>`
-    + `<div class="daylog"><label class="tf">기상${TP(`data-day="${t}" data-f="wake"`, wakeOf(t), { lab: '기상' })}</label><label class="tf">취침${TP(`data-day="${t}" data-f="sleep"`, sleepOf(t), { lab: '취침' })}</label></div></div>`;
-  return planBanner() + head
-    + (od.length ? `<div class="card banner"><div class="row"><span class="grow">못 끝낸 일 <b>${od.length}개</b>가 있어요.</span><button data-a="inbox">골라서 가져오기</button><button class="pri" data-a="rollAll">모두 오늘로</button></div></div>` : '')
-    + `<div class="tday"><div class="tgw">${timeGrid(from, to, blocks, { date: t })}<p class="mu hide-m" style="font-size:12.5px;margin:8px 2px 0">칸을 끌거나, 시작 칸과 끝 칸을 차례로 누르면 그 시간으로 일정을 넣어요. 키보드 ← → 로 어제·내일로 넘겨요.</p></div>`
-    + `<div class="tlist">${right}</div><div class="tadd">${addForm(t, 'today')}${past ? '' : `<button class="dash" data-a="inbox" data-d="${t}">+ 못 끝낸 일·할 일 ${isT ? '' : rel + '로 '}가져오기</button>`}</div></div>`
-    + `<div class="two stack"><div class="card"><h3>${esc(dn)} 메모${isT || !near ? '' : ` <small>${esc(mdw(t))}</small>`}</h3><textarea data-note="${t}" rows="4" placeholder="생각, 배운 점, 한 줄 회고">${esc(D.notes[t] || '')}</textarea></div>`
-    + `<div class="card"><div class="row" style="margin-bottom:4px"><h3 class="grow" style="margin:0">습관</h3><button class="ic tx" data-a="tab" data-t="habit">습관 관리</button></div>${habits}</div></div>`;
+  const t = tdv, isT = t === T0, its = dayItems(t), F = frameItems(t), od = isT ? overdue() : [];
+  // 습관은 격자에 넣지 않아요
+  const gl = F.list.filter(x => !isHabitItem(x.i));
+  const blocks = gl.map(({ i, a, b }) => ({ a, b, c: colorOf(i), f: fillOf(i), label: i.title, id: i.id, cls: i.done ? 'done' : '' }));
+  const from = Math.min(F.w, ...gl.map(x => x.a)), to = Math.max(F.s, ...gl.map(x => x.b));
+  const note = D.notes[t] || '';
+  const memo = `<button class="dzmemo" data-a="memoOpen" data-d="${t}" aria-label="메모 ${note ? '크게 보기' : '쓰기'}"><b>메모</b><span class="dzmt">${note ? esc(note) : '<span class="mu">눌러서 오늘의 메모 쓰기</span>'}</span></button>`;
+  // 분류별 목록
+  const main = its.filter(i => !isHabitItem(i));
+  const groups = [...D.cats.filter(c => !isHabitCat(c.id)).map(c => ({ id: c.id, name: c.name, c: catFill(c) })), { id: '', name: '분류 없음', c: PAL.gray[1] }]
+    .map(g => ({ ...g, its: main.filter(i => (i.cat && catOf(i.cat) ? i.cat : '') === g.id) })).filter(g => g.its.length)
+    .map(g => ({ ...g, k: Math.min(...g.its.map(i => i.time ? itemStart(i) : 9999)) })).sort((a, b) => a.k - b.k);
+  const xb = i => i.g ? '<span class="dzx sp"></span>' : `<button class="dzx" data-a="dzDel" data-id="${esc(i.id)}" aria-label="${i.fixed ? '이 날만 빼기' : '삭제'}: ${esc(i.title)}">${XX}</button>`;
+  const li = i => `<div class="dzit${i.done ? ' done' : ''}"><div class="dzi1">${dzBox(i)}<button class="dzname" data-a="open" data-id="${esc(i.id)}">${esc(i.title)}</button>${xb(i)}</div><div class="dzi2"><button class="dztime dznum" data-a="open" data-id="${esc(i.id)}">${i.time ? tspan(i) : '시간 미정'}</button></div></div>`;
+  let list = groups.map(g => `<div class="dzg" style="--c:${g.c}"><div class="dzgh"><i></i>${esc(g.name)}</div>${g.its.map(li).join('')}</div>`).join('');
+  // 습관: 이번 주 몇 번 했는지 (n/7)
+  const m0 = mon(t), wk = m0 === mon(T0) ? '이번주' : '그 주';
+  const ruleWeek = rid => { const r = by(D.rules, rid); let a = 0, b = 0; for (let k = 0; k < 7; k++) { const d = addD(m0, k); if (r && r.days.includes(wd(d))) { b++; if (D.ruleLog[rid]?.[d]?.done) a++; } } return `${a}/${b || 7}`; };
+  const hab = its.filter(isHabitItem).map(i => `<div class="dzit dzhab${i.done ? ' done' : ''}"><div class="dzi1">${dzBox(i)}<button class="dzname" data-a="open" data-id="${esc(i.id)}">${esc(i.title)}</button><small class="dzwk7 dznum">${i.fixed ? `${wk} ${ruleWeek(i.rule)}` : ''}</small>${xb(i)}</div></div>`)
+    .concat(D.habits.map(x => { const on = hDone(t, x); return `<div class="dzit dzhab${on ? ' done' : ''}"><div class="dzi1"><button class="dzc${on ? ' on' : ''}" data-a="habit" data-id="${esc(x.id)}" data-d="${t}" aria-pressed="${on}" aria-label="${esc(x.name)}"${t > T0 ? ' disabled' : ''}>${on ? CHK : ''}</button><span class="dzname">${esc(x.name)}</span><small class="dzwk7 dznum">${wk} ${hWeek(x, m0)}/${x.perWeek || 7}</small><span class="dzx sp"></span></div></div>`; }));
+  const hc = D.cats.find(c => isHabitCat(c.id));
+  if (hab.length) list += `<div class="dzg" style="--c:${hc ? catFill(hc) : PAL.lav[1]}"><div class="dzgh"><i></i>습관</div>${hab.join('')}</div>`;
+  if (!list) list = `<p class="dzempty mu">${isT ? '오늘' : '이 날'}은 일정이 없어요. 왼쪽 시간 칸을 누르면 그 시각부터 일정을 넣어요.</p>`;
+  const top = od.length ? `<div class="dzod"><small>못 끝낸 일 <span class="dznum">${od.length}</span>개</small><button class="dzu" data-a="inbox">가져오기</button></div>` : '';
+  return `<div class="dz dz-today">${dzHead('today', t)}<div class="dzday"><div class="dzgrid">${timeGrid(from, to, blocks, { date: t, hl: true })}${memo}</div><div class="dzlist">${top}${list}<button class="dzu dzadd" data-a="quickNew" data-d="${t}">+ 할 일 추가</button></div></div></div>`;
+}
+
+/* ---------- 일정 넣기 팝업 (홈·오늘과 같은 서체·색) ---------- */
+let qkD = '';
+function openQuick(pre = {}) {
+  const m = $('#m'), d = qkD = pre.date || tdv || today(), cats = D.cats.filter(c => !isHabitCat(c.id)), cv = pre.cat ?? (cats.some(c => c.id === lastCat) ? lastCat : '');
+  m.innerHTML = `<form method="dialog" class="dzq"><div class="dzqh"><span class="dzqd">${esc(kd(d))}</span><b>새 일정</b></div><div class="dzs">`
+    + dzRow('시간', `<span class="dzqt">${TP('name="time"', pre.time || '', { lab: '시작', cls: 'dztp' })}<span class="dzdash">-</span>${TP('name="end"', pre.end || '', { lab: '끝', cls: 'dztp' })}</span>`)
+    + dzRow('할 일', `<input name="title" class="dzin" placeholder="할 일 이름" required autocomplete="off" enterkeyhint="done" aria-label="할 일 이름" value="${esc(pre.title || '')}">`)
+    + dzRow('분류', `<div class="dzcats">${cats.map(c => `<label class="dzcat" style="--f:${catFill(c)}"><input type="radio" name="cat" value="${esc(c.id)}"${c.id === cv ? ' checked' : ''}><span>${esc(c.name)}</span></label>`).join('')}<label class="dzcat" style="--f:#f2f2f4"><input type="radio" name="cat" value=""${cv ? '' : ' checked'}><span>없음</span></label></div>`, 'tall')
+    + `</div><div class="dzqf"><button type="button" class="dzu" data-a="quickMore">자세히</button><span class="grow"></span><button value="no" class="dzlink" formnovalidate>취소</button><button value="ok" class="dzsave">저장</button></div></form>`;
+  m.onclose = () => {
+    if (m.returnValue !== 'ok') return;
+    const fd = new FormData(m.querySelector('form')), title = String(fd.get('title') || '').trim(); if (!title) return;
+    const time = String(fd.get('time') || ''), end = time ? String(fd.get('end') || '') : '', cat = String(fd.get('cat') || '');
+    lastCat = cat; const x = newItem({ title, date: d, time, end, cat }); save(); autoSync(x);
+  };
+  dzShow(m); setTimeout(() => { const i = m.querySelector('input[name=title]'); if (i && !pre.title) i.focus({ preventScroll: true }); }, 60);
+}
+function quickMore() {
+  const m = $('#m'), f = m.querySelector('form'); if (!f) return;
+  const fd = new FormData(f), time = String(fd.get('time') || '');
+  const pre = { date: qkD || today(), title: String(fd.get('title') || '').trim(), time, end: time ? String(fd.get('end') || '') : '', cat: String(fd.get('cat') || '') };
+  m.onclose = () => setTimeout(() => openItem(0, pre), 0); m.close('more');
+}
+function openMemo(d) {
+  const m = $('#m');
+  m.innerHTML = `<form method="dialog" class="dzq dzmemof"><div class="dzqh"><span class="dzqd">${esc(kd(d))}</span><b>메모</b></div><textarea data-note="${d}" rows="10" placeholder="생각, 배운 점, 한 줄 회고" aria-label="메모">${esc(D.notes[d] || '')}</textarea><div class="dzqf"><span class="grow"></span><button value="ok" class="dzsave">닫기</button></div></form>`;
+  m.onclose = () => { persist(); render(); };
+  dzShow(m);
 }
 
 /* ================= 9. 주간: 오늘을 가운데 둔 7일 10분 칸 시간표 ================= */
@@ -2044,6 +2328,7 @@ function markSel(grid, a, b) { grid.querySelectorAll('.cell').forEach(c => { con
 function finishPick(grid, a, b) {
   markSel(grid, -1, -1); $('#toast').className = '';
   const date = grid.dataset.date, nd = a >= 1440 ? addD(date, 1) : date;
+  if (grid.closest('.dz')) return openQuick({ date: nd, time: fromMin(a), end: fromMin(b) });
   openItem(0, { date: nd, time: fromMin(a), end: fromMin(b) });
 }
 document.addEventListener('pointerdown', e => {
@@ -2065,6 +2350,7 @@ document.addEventListener('click', e => {
   if (e.pointerType === '' || e.pointerType === 'touch' || e.pointerType === 'pen') tapPick(c.closest('.tg'), +c.dataset.slot);
 });
 function tapPick(grid, s) {
+  if (grid.closest('.dz')) { pick = null; return finishPick(grid, s, s + 60); }
   if (pick && pick.grid === grid) { const [a, b] = slotsRange(pick.s, s); pick = null; finishPick(grid, a, b); return; }
   pick = { grid, s }; markSel(grid, s, s + 10); toast('끝나는 칸을 눌러요 (같은 칸을 다시 누르면 10분)');
 }
@@ -2105,6 +2391,11 @@ function liveTick() { // 1초마다 숫자만 바꿔요 (화면 전체를 다시
   const fm = dur(focusMins(t)), ft = document.querySelector('[data-live=focusT]'); if (ft) ft.textContent = fm;
   const tt = document.querySelector('[data-live=focusTitle]'); if (tt) tt.textContent = `오늘 집중 ${fm}`;
   const fb = document.querySelector('[data-live=focusBig]'); if (fb) fb.textContent = fm;
+  const fz = document.querySelector('[data-live=ftimer]'); if (fz) fz.textContent = f ? focusClock(f) : '00:00';
+  const n = nowMin();
+  document.querySelectorAll('[data-live=nowbar]').forEach(b => { const [a, z] = b.dataset.ab.split(',').map(Number), i = b.firstElementChild; if (i) i.style.width = Math.round(Math.max(0, Math.min(1, (n - a) / (z - a))) * 100) + '%'; });
+  document.querySelectorAll('[data-live=nowleft]').forEach(b => { const [a, z] = b.dataset.ab.split(',').map(Number); b.textContent = n < a ? `${dur(a - n)} 뒤 시작` : n < z ? `${dur(z - n)} 남음` : '끝났어요'; if (n >= z || (n >= a && b.dataset.cur !== '1')) b.dataset.stale = '1'; });
+  if (document.querySelector('[data-live=nowleft][data-stale]') && !document.querySelector('dialog[open]')) render();
 }
 
 /* ================= 16. 구글 캘린더 ================= */
@@ -2576,6 +2867,18 @@ const A = {
   afDur: (d, b) => { const f = b.closest('.addf'), st = f.querySelector('.af-s'), en = f.querySelector('.af-e'); if (!st.value) setTP(st, afStart(f.dataset.date)); setTP(en, addMin(st.value, +d.m)); },
   afAdd: (d, b) => afSubmit(b.closest('.addf')),
   goDay: d => { sel = d.d; cm = d.d.slice(0, 7); T = 'cal'; render(); scrollTo(0, 0); },
+  goCal: d => { cm = d.m || today().slice(0, 7); T = 'cal'; render(); scrollTo(0, 0); },
+  dayGo: d => { tdv = d.d; T = 'today'; render(); scrollTo(0, 0); },
+  goGoal: () => { const id = D.bigGoal.projectId; if (!D.bigGoal.text && !id) return openGoal(); curP = id && projOf(id) ? id : null; if (!curP) pf = '진행 중'; T = 'proj'; render(); scrollTo(0, 0); },
+  goProj: () => { curP = null; pf = '진행 중'; T = 'proj'; render(); scrollTo(0, 0); },
+  dayEdit: d => openTimeEdit(d.f === 'wake' ? '기상 시각' : '취침 시각', D.days[d.d]?.[d.f] || '', v => { const x = D.days[d.d] || (D.days[d.d] = {}); if (v) x[d.f] = v; else delete x[d.f]; save(); }),
+  wsEdit: d => { const w = by(D.work, d.id); if (!w) return; openTimeEdit(d.f === 'in' ? '출근 시각' : '퇴근 시각', w[d.f], v => { if (!v && d.f === 'in') D.work = D.work.filter(x => x !== w); else w[d.f] = v; save(); }); },
+  timeClear: () => $('#m').close('clear'),
+  sessEdit: d => openSess(d.d),
+  dzDel: async d => { const x = getItem(d.id); if (!x) return; const r = await dzAsk(x.fixed ? '이 날만 뺄까요?' : '일정을 취소하겠습니까?', x.fixed ? `고정 일정 '${x.title}'을(를) ${md(x.date)}만 시간표와 목록에서 빼요.` : `'${x.title}'을(를) 시간표와 목록에서 지워요.`, [['no', '아니요'], ['yes', '네', 'pri']]); if (r === 'yes') delItem(d.id); },
+  memoOpen: d => openMemo(d.d),
+  quickNew: d => openQuick({ date: d.d }),
+  quickMore,
   mcm: d => { const [y, m] = mcm.split('-').map(Number); mcm = iso(new Date(y, m - 1 + +d.n, 1)).slice(0, 7); render(); },
   hwk: d => { hwk = +d.n ? addD(hwk || mon(today()), +d.n) : mon(today()); render(); },
   habEdit: d => openHabit(d.id),
@@ -2626,10 +2929,10 @@ const A = {
   editGoal: openGoal,
   range: d => { chartRange = +d.n; chartSel = null; render(); },
   chartSel: d => { chartSel = chartSel === d.d ? null : d.d; render(); },
-  wsDel: d => { D.work = D.work.filter(w => w.id !== d.id); save(); },
-  fsDel: d => { D.focus = D.focus.filter(w => w.id !== d.id); save(); },
-  wsAdd: d => { D.work.push({ id: uid(), date: d.d, in: '10:00', out: '18:00' }); save(); },
-  fsAdd: d => { D.focus.push({ id: uid(), date: d.d, start: '10:00', end: '12:00' }); save(); },
+  wsDel: d => { D.work = D.work.filter(w => w.id !== d.id); save(); if (sessD) openSess(sessD); },
+  fsDel: d => { D.focus = D.focus.filter(w => w.id !== d.id); save(); if (sessD) openSess(sessD); },
+  wsAdd: d => { D.work.push({ id: uid(), date: d.d, in: '10:00', out: '18:00' }); save(); if (sessD) openSess(sessD); },
+  fsAdd: d => { D.focus.push({ id: uid(), date: d.d, start: '10:00', end: '12:00' }); save(); if (sessD) openSess(sessD); },
   pf: d => { pf = d.f; render(); },
   proj: d => { curP = d.id; T = 'proj'; render(); scrollTo(0, 0); },
   projBack: () => { curP = null; render(); scrollTo(0, 0); },
@@ -2673,7 +2976,7 @@ document.addEventListener('keydown', e => {
   const t = e.target;
   if (e.key === 'Enter' && t.dataset && t.dataset.qa !== undefined && !e.isComposing) { e.preventDefault(); quickAdd(t); }
   else if (e.key === 'Enter' && t.closest && t.closest('.addf') && t.tagName === 'INPUT' && !e.isComposing) { e.preventDefault(); afSubmit(t.closest('.addf')); }
-  else if ((e.key === 'Enter' || e.key === ' ') && t.dataset && t.dataset.a && t.getAttribute('role') === 'button') { e.preventDefault(); A[t.dataset.a](t.dataset); }
+  else if ((e.key === 'Enter' || e.key === ' ') && t.dataset && t.dataset.a && t.getAttribute('role') === 'button' && A[t.dataset.a]) { e.preventDefault(); A[t.dataset.a](t.dataset); }
   else if (e.key === 'Enter' && t.id === 'newHab' && !e.isComposing) { e.preventDefault(); A.habAdd(); }
   else if (e.key === 'Enter' && t.dataset.wish !== undefined && !e.isComposing) { e.preventDefault(); const nx = document.querySelector(`[data-wish="${+t.dataset.wish + 1}"]`); if (nx) nx.focus(); }
   else if (e.key === 'Enter' && t.id === 'bq' && !e.isComposing) { e.preventDefault(); A.bookFind(); }
