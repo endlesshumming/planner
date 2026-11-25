@@ -8,7 +8,7 @@
   스크립트를 고치면 페이지가 멈출 수 있어요. 그럴 땐 브라우저 개발자 도구 콘솔에 표시되는
   새 해시('sha256-…')로 바꾸거나, 이 meta 한 줄을 지우면 됩니다.
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-FKmlaT6uNDEq8aLONXys9ATEYUhZ9TM/vYsLgw3YG6w=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-7RQ/v2dJ5eyyqqEkEReVcn4hHXhHQmlZ0yBmdsgFI+4=' https://accounts.google.com/gsi/client https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://script.google.com https://script.googleusercontent.com https://www.googleapis.com https://accounts.google.com/gsi/ https://dapi.kakao.com https://openlibrary.org; frame-src https://accounts.google.com/gsi/; img-src 'self' data: blob: https:; font-src data:; object-src 'none'; base-uri 'none'">
 <title>플래너</title>
 <style>
 /* 서체: Apple SD Gothic Neo(산돌고딕). 인터넷에 올리는 파일이라 서체 파일은 넣지 않고 기기에 있는 서체를 써요 (맥·아이폰은 그대로, 윈도는 맑은 고딕). */
@@ -105,8 +105,8 @@ small{font-size:12.5px}
 .tp{display:inline-flex;align-items:center;gap:2px;min-width:0}
 .tp select{padding:6px 4px 6px 8px;font-weight:400;color:var(--tx);font-variant-numeric:tabular-nums;width:auto;min-width:0;text-align:center;text-align-last:center}
 .tp .tp-c{color:var(--mu);font-weight:600;padding:0 1px}
-label>.tp{display:flex;width:100%;margin-top:4px}
-label>.tp select{flex:1 1 0;display:block}
+label>.tp,.lbl>.tp{display:flex;width:100%;margin-top:4px}
+label>.tp select,.lbl>.tp select{flex:1 1 0;display:block}
 .tf .tp select{flex:none}
 .durs{display:inline-flex;gap:4px;flex-wrap:wrap}
 .dur{padding:4px 9px;font-size:12.5px;border-radius:8px;background:#fff}
@@ -339,9 +339,13 @@ label>.tp select{flex:1 1 0;display:block}
 dialog{border:0;border-radius:20px;background:#fff;color:var(--tx);width:min(94vw,520px);max-height:92vh;overflow:auto;padding:20px;box-shadow:0 16px 40px rgba(0,0,0,.16)}
 dialog::backdrop{background:rgba(0,0,0,.28)}
 dialog p{white-space:pre-line}
-label{display:block;margin:10px 0 4px;color:var(--mu);font-size:13px;font-weight:600}
+label,.lbl{display:block;margin:10px 0 4px;color:var(--mu);font-size:13px;font-weight:600}
+.g2>*,.g3>*{min-width:0}
+input[type=date],input[type=time]{min-width:0;max-width:100%}
+input[type=date]{-webkit-appearance:none;appearance:none;min-height:2.6em}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
 label>input:not([type=checkbox]):not([type=radio]),label>select,label>textarea{display:block;width:100%;margin-top:4px;color:var(--tx);font-weight:400}
-label .row>*{color:var(--tx);font-weight:400}
+label .row>*,.lbl .row>*{color:var(--tx);font-weight:400}
 .ck{display:inline-flex!important;gap:6px;align-items:center;margin:0!important;color:var(--tx2)!important;font-weight:600}
 .ck input{width:auto!important;margin:0;accent-color:var(--mint)}
 .ttl{flex:1;font-size:18px;font-weight:600;letter-spacing:-.03em}
@@ -1305,7 +1309,7 @@ const afState = {};
 function addForm(date, key) {
   const st = afState[key] || {}, cv = st.c ?? lastCat;
   return `<div class="addf" data-date="${esc(date)}" data-key="${esc(key)}"><input class="af-t" data-k="af:${esc(key)}" placeholder="할 일 (Enter로 추가)" aria-label="할 일">`
-    + `<div class="af-row"><label class="tf">시작${TP('class="af-s"', st.s || '', { lab: '시작' })}</label><label class="tf">끝${TP('class="af-e"', '', { lab: '끝' })}</label><span class="durs">${[[30, '30분'], [60, '1시간'], [90, '1시간 반'], [120, '2시간']].map(([m, l]) => `<button type="button" class="dur" data-a="afDur" data-m="${m}">${l}</button>`).join('')}</span></div>`
+    + `<div class="af-row"><div class="lbl tf">시작${TP('class="af-s"', st.s || '', { lab: '시작' })}</div><div class="lbl tf">끝${TP('class="af-e"', '', { lab: '끝' })}</div><span class="durs">${[[30, '30분'], [60, '1시간'], [90, '1시간 반'], [120, '2시간']].map(([m, l]) => `<button type="button" class="dur" data-a="afDur" data-m="${m}">${l}</button>`).join('')}</span></div>`
     + `<div class="af-row"><select class="af-c" aria-label="분류"><option value="">분류 없음</option>${D.cats.map(c => `<option value="${esc(c.id)}"${c.id === cv ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select><button type="button" class="pri" data-a="afAdd">추가</button></div></div>`;
 }
 function afStart(date) {
@@ -2073,10 +2077,10 @@ function vSet() {
   const opt = (arr, v) => arr.map(([a, b]) => `<option value="${a}"${String(v) === a ? ' selected' : ''}>${b}</option>`).join('');
   const colorOpts = v => Object.entries(PAL).map(([k, [n]]) => `<option value="${k}"${v === k ? ' selected' : ''}>${n}</option>`).join('');
   return `<div class="card"><h3>고정 일정</h3><p class="mu">매주 같은 요일·시간에 하는 일이에요. 달력·오늘·주간에 자동으로 들어가고, 날마다 따로 체크해요. 하루만 빼고 싶으면 그날 일정의 휴지통을 누르면 돼요.</p>${D.rules.map(r => `<div class="it" style="--c:${colorOf(r)}"><span class="cbar"></span><button class="ib" data-a="editRule" data-id="${esc(r.id)}"><span>${iconOf({ ...r, fixed: true })}</span><span class="t">${esc(r.title)}</span><span class="tm">${esc(ruleSum(r))}</span>${r.active ? '' : '<span class="chip">꺼짐</span>'}</button><label class="ck"><input type="checkbox" data-rule="${esc(r.id)}" data-f="active"${r.active ? ' checked' : ''}>사용</label><button class="ic del" data-a="delRule" data-id="${esc(r.id)}" aria-label="고정 일정 삭제: ${esc(r.title)}">${TRASH}</button></div>`).join('') || '<div class="empty">아직 없어요.</div>'}<button class="pri" data-a="newRule" style="margin-top:8px">＋ 고정 일정</button></div>
-<div class="card"><h3>기상 · 취침</h3><p class="mu">타임라인과 시간표가 기상 시각에 시작해서 취침 시각에 끝나요. 날마다 실제 시각은 오늘·홈에서 기록해요.</p><div class="g2"><label>평일 기상${TP('data-s="wake"', S.wake, { lab: '평일 기상' })}</label><label>평일 취침${TP('data-s="sleep"', S.sleep, { lab: '평일 취침' })}</label><label>주말 기상${TP('data-s="wakeWE"', S.wakeWE, { lab: '주말 기상' })}</label><label>주말 취침${TP('data-s="sleepWE"', S.sleepWE, { lab: '주말 취침' })}</label></div></div>
+<div class="card"><h3>기상 · 취침</h3><p class="mu">타임라인과 시간표가 기상 시각에 시작해서 취침 시각에 끝나요. 날마다 실제 시각은 오늘·홈에서 기록해요.</p><div class="g2"><div class="lbl">평일 기상${TP('data-s="wake"', S.wake, { lab: '평일 기상' })}</div><div class="lbl">평일 취침${TP('data-s="sleep"', S.sleep, { lab: '평일 취침' })}</div><div class="lbl">주말 기상${TP('data-s="wakeWE"', S.wakeWE, { lab: '주말 기상' })}</div><div class="lbl">주말 취침${TP('data-s="sleepWE"', S.sleepWE, { lab: '주말 취침' })}</div></div></div>
 <div class="card"><h3>알림 (휴대폰 · 노트북)</h3><p class="mu">이 페이지가 열려 있는 브라우저에서는 바로 알림이 떠요. 페이지를 닫아도 휴대폰·노트북에서 받으려면 아래 구글 캘린더 연동을 켜 두세요.</p>
 <div class="set-row"><button class="${perm === 'granted' ? '' : 'pri'}" data-a="notif">${perm === 'granted' ? '브라우저 알림 켜짐 ✓' : '이 브라우저에서 알림 켜기'}</button><button data-a="testNotif">테스트 알림</button></div>
-<div class="g2"><label>시간 있는 일정의 기본 알림<select data-s="defRemind">${opt(REM_T.filter(r => r[0] !== 'eve'), S.defRemind)}</select></label><label>아침 요약 (오늘 일정)${TP('data-s="morning"', S.morning, { lab: '아침 요약' })}</label><label>전날 저녁 요약 (내일 일정)${TP('data-s="evening"', S.evening, { lab: '저녁 요약' })}</label><label>주간 계획 알림<span class="row" style="margin-top:3px"><select data-s="planDay">${[0, 1, 2, 3, 4, 5, 6].map(i => `<option value="${i}"${+S.planDay === i ? ' selected' : ''}>${DOW[i]}요일</option>`).join('')}</select>${TP('data-s="planTime"', S.planTime, { lab: '주간 계획 알림' })}</span></label></div></div>
+<div class="g2"><label>시간 있는 일정의 기본 알림<select data-s="defRemind">${opt(REM_T.filter(r => r[0] !== 'eve'), S.defRemind)}</select></label><div class="lbl">아침 요약 (오늘 일정)${TP('data-s="morning"', S.morning, { lab: '아침 요약' })}</div><div class="lbl">전날 저녁 요약 (내일 일정)${TP('data-s="evening"', S.evening, { lab: '저녁 요약' })}</div><div class="lbl">주간 계획 알림<span class="row" style="margin-top:3px"><select data-s="planDay">${[0, 1, 2, 3, 4, 5, 6].map(i => `<option value="${i}"${+S.planDay === i ? ' selected' : ''}>${DOW[i]}요일</option>`).join('')}</select>${TP('data-s="planTime"', S.planTime, { lab: '주간 계획 알림' })}</span></div></div></div>
 <div class="card"><h3>구글 드라이브 자동 동기화</h3><p class="mu">노트북과 휴대폰이 같은 기록을 쓰도록, 기록을 내 구글 드라이브의 숨김 앱 폴더에 저장하고 서로 맞춰요. 사진·책 표지도 함께 올라가요. 드라이브 화면에는 보이지 않고 이 플래너만 열어 볼 수 있어요.</p>${preloadGSI() || ''}
 <p>상태: <b id="syncOut">${esc(syncStatusText())}</b></p>
 <div class="set-row"><label class="ck"><input type="checkbox" data-sync="on"${SY.on ? ' checked' : ''}>이 기기에서 자동 동기화</label><label class="ck"><input type="checkbox" data-sync="autoRe"${SY.autoRe === false ? '' : ' checked'}>연결이 끊기면 화면을 누를 때 자동으로 다시 연결</label><button class="pri" data-a="driveSync">지금 동기화</button><button data-a="phoneLink">휴대폰 연결 주소 만들기</button></div>
@@ -2121,7 +2125,7 @@ function openItem(id, pre = {}) {
   const ro = !!x.g, dis = ro ? ' disabled' : '', m = $('#m');
   const rem = x.remind || (x.time ? D.set.defRemind : 'none');
   m.innerHTML = `<form method="dialog" class="itemf"><div class="row"><input name="title" class="ttl" required value="${esc(x.title)}" placeholder="제목" aria-label="제목"${ro ? ' readonly' : ''}><label class="ck"><input type="checkbox" name="done"${x.done ? ' checked' : ''}>완료</label></div>
-<div class="g3"><label>날짜<input type="date" name="date" value="${esc(x.date)}"${dis}></label><label>시작${TP('name="time"', x.time, { lab: '시작', dis: ro })}</label><label>끝${TP('name="end"', x.end, { lab: '끝', dis: ro })}</label></div>
+<div class="g3"><label>날짜<input type="date" name="date" value="${esc(x.date)}"${dis}></label><div class="lbl">시작${TP('name="time"', x.time, { lab: '시작', dis: ro })}</div><div class="lbl">끝${TP('name="end"', x.end, { lab: '끝', dis: ro })}</div></div>
 <label>분류</label><div class="cats">${catChips(x.cat, dis)}</div>
 <div class="g2"><label>프로젝트${projSelect(x.projectId).replace('<select', `<select${dis}`)}</label><label>중요도<select name="pri"${dis}>${[['', '없음'], ['A', 'A · 꼭'], ['B', 'B · 해야 함'], ['C', 'C · 하면 좋음']].map(([a, b]) => `<option value="${a}"${(x.pri || '') === a ? ' selected' : ''}>${b}</option>`).join('')}</select></label></div>
 <label>알림<select name="remind">${remindOpts(!!x.time, rem)}</select></label>
@@ -2171,7 +2175,7 @@ function openRule(id, pre = {}) {
   m.innerHTML = `<form method="dialog"><h3>${nw ? '새 고정 일정' : '고정 일정 고치기'}</h3><div class="row"><input name="icon" value="${esc(r.icon || '')}" placeholder="🙂" aria-label="아이콘 (이모지)" style="width:3.4em;text-align:center;font-size:18px"><input name="title" class="ttl" required value="${esc(r.title)}" placeholder="예: 스쿼시" aria-label="제목"></div>
 <label>요일</label><div class="row"><div class="dpicks">${MONFIRST.map(k => `<label class="dpick"><input type="checkbox" name="days" value="${k}"${r.days.includes(k) ? ' checked' : ''}><span>${DOW[k]}</span></label>`).join('')}</div><button type="button" data-a="dpreset" data-v="all">매일</button><button type="button" data-a="dpreset" data-v="wk">평일</button><button type="button" data-a="dpreset" data-v="we">주말</button></div>
 <label class="ck" style="margin-top:10px!important"><input type="checkbox" name="anchor"${r.anchor === 'wake' ? ' checked' : ''}>기상 직후에 하기 (기상 시각을 따라가요)</label>
-<div class="g3"><label>시작${TP('name="time"', r.time, { lab: '시작' })}</label><label>끝${TP('name="end"', r.end, { lab: '끝' })}</label><label>기상 후 걸리는 시간(분)<input type="number" name="dur" min="5" step="5" value="${esc(r.dur || 10)}"></label></div>
+<div class="g3"><div class="lbl">시작${TP('name="time"', r.time, { lab: '시작' })}</div><div class="lbl">끝${TP('name="end"', r.end, { lab: '끝' })}</div><label>기상 후 걸리는 시간(분)<input type="number" name="dur" min="5" step="5" value="${esc(r.dur || 10)}"></label></div>
 <label>분류</label><div class="cats">${catChips(r.cat)}</div>
 <div class="g2"><label>시작일<input type="date" name="start" value="${esc(r.start)}"></label><label>종료일 (선택)<input type="date" name="until" value="${esc(r.until)}"></label></div>
 <div class="g2"><label>알림<select name="remind">${remindOpts(true, r.remind)}</select></label><div style="align-self:end;margin-bottom:6px;display:flex;flex-direction:column;gap:4px"><label class="ck"><input type="checkbox" name="active"${r.active ? ' checked' : ''}>지금부터 사용</label><label class="ck"><input type="checkbox" name="onCal"${r.onCal ? ' checked' : ''}>월간 달력에도 보이기</label></div></div>
